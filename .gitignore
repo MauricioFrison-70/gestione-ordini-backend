@@ -1,0 +1,43 @@
+############################
+# IntelliJ IDEA
+############################
+.idea/
+*.iml
+out/
+
+############################
+# Maven
+############################
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+############################
+# Spring Boot
+############################
+# Arquivos gerados em runtime
+*.log
+*.tmp
+
+############################
+# Java
+############################
+*.class
+*.jar
+*.war
+*.ear
+
+############################
+# Sistema Operacional
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Arquivos temporários
+############################
+*.swp
+*.swo
