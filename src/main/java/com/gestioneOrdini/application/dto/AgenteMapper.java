@@ -1,6 +1,7 @@
 package com.gestioneOrdini.application.dto;
 
 import com.gestioneOrdini.domain.model.Agente;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,21 +26,30 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AgenteMapper {
-
+    /**
+     * Converte o DTO de entrada (API) para o modelo de domínio.
+     */
     public Agente toDomain(AgenteRequest request) {
         return new Agente(
                 request.getNome(),
                 request.getEmail(),
-                request.getTipoAgente()
+                request.getTipoAgente(),
+                request.getArchiviato()
         );
     }
 
-    public AgenteResponse toResponse(Agente agente) {
+    /**
+     * Converte a entidade persistida para o DTO de saída (API).
+     */
+    public AgenteResponse toResponse(AgenteEntity entity) {
         return new AgenteResponse(
-                agente.getId(),
-                agente.getNome(),
-                agente.getEmail(),
-                agente.getTipoAgente()
+                entity.getId(),
+                entity.getNome(),
+                entity.getEmail(),
+                entity.getTipoAgente(),
+                entity.getArchiviato(),
+                entity.getDataRegistrazione()
         );
     }
 }
+

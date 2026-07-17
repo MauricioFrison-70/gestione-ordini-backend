@@ -4,6 +4,7 @@ import com.gestioneOrdini.domain.model.Agente;
 import com.gestioneOrdini.domain.repository.AgenteRepository;
 import com.gestioneOrdini.domain.event.AgenteCreatoEvent;
 import com.gestioneOrdini.domain.event.handler.AgenteCreatoEventHandler;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -43,10 +44,16 @@ public class CreateAgenteUseCase {
      */
 
 
-    public Agente executar(Agente agente) {
-        Agente salvato = repository.salva(agente);
+    public AgenteEntity executar(Agente agente) {
 
-        // Dispara evento de domínio
+        AgenteEntity entity = new AgenteEntity();
+        entity.setNome(agente.getNome());
+        entity.setEmail(agente.getEmail());
+        entity.setTipoAgente(agente.getTipoAgente());
+        entity.setArchiviato(agente.getArchiviato());
+
+        AgenteEntity salvato = repository.salva(entity);
+
         AgenteCreatoEvent event = new AgenteCreatoEvent(
                 salvato.getId(),
                 salvato.getEmail(),
@@ -58,26 +65,4 @@ public class CreateAgenteUseCase {
         return salvato;
     }
 
-
-
-    /*
-    public Agente executar(Agente agente) {
-        try {
-            // 1. Salvar no repositório
-            Agente criado = repository.salva(agente);
-
-            // 2. Disparar evento
-            eventHandler.handle(new AgenteCreatoEvent(criado));
-
-            return criado;
-
-        } catch (Exception e) {
-            // Log detalhado no console
-            System.err.println("ERRO AO CRIAR AGENTE:");
-            e.printStackTrace();
-
-            // Opcional: lançar exceção mais clara para o controller
-            throw new RuntimeException("Falha ao criar agente: " + e.getMessage(), e);
-        }
-    } */
 }

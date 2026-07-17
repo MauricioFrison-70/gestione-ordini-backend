@@ -2,6 +2,7 @@ package com.gestioneOrdini.application.usecase;
 
 import com.gestioneOrdini.domain.model.Agente;
 import com.gestioneOrdini.domain.repository.AgenteRepository;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -35,13 +36,14 @@ public class UpdateAgenteUseCase {
         this.repository = repository;
     }
 
-    public Agente executar(Long id, Agente dadosAtualizados) {
-        Agente existente = repository.findById(id)
+    public AgenteEntity executar(Long id, Agente dadosAtualizados) {
+        AgenteEntity existente = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Agente non trovato"));
 
         existente.setNome(dadosAtualizados.getNome());
         existente.setEmail(dadosAtualizados.getEmail());
         existente.setTipoAgente(dadosAtualizados.getTipoAgente());
+        existente.setArchiviato(dadosAtualizados.getArchiviato());
 
         return repository.salva(existente);
     }

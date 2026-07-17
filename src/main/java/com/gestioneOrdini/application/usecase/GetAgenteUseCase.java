@@ -2,6 +2,7 @@ package com.gestioneOrdini.application.usecase;
 
 import com.gestioneOrdini.domain.model.Agente;
 import com.gestioneOrdini.domain.repository.AgenteRepository;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,7 +35,7 @@ public class GetAgenteUseCase {
         this.repository = repository;
     }
 
-    public Agente executar(Long id) {
+    public AgenteEntity executar(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Agente non trovato"));
     }

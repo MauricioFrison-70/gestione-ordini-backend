@@ -5,6 +5,7 @@ import com.gestioneOrdini.application.dto.AgenteRequest;
 import com.gestioneOrdini.application.dto.AgenteResponse;
 import com.gestioneOrdini.application.usecase.*;
 import com.gestioneOrdini.domain.model.Agente;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,7 +60,7 @@ public class AgenteController {
     @PostMapping
     public ResponseEntity<AgenteResponse> criar(@RequestBody AgenteRequest request) {
         Agente agente = mapper.toDomain(request);
-        Agente criado = createUseCase.executar(agente);
+        AgenteEntity criado = createUseCase.executar(agente);
 
         URI location = URI.create("/api/agenti/" + criado.getId());
 
@@ -71,7 +72,7 @@ public class AgenteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AgenteResponse> buscarPorId(@PathVariable Long id) {
-        Agente agente = getUseCase.executar(id);
+        AgenteEntity agente = getUseCase.executar(id);
         return ResponseEntity.ok(mapper.toResponse(agente));
     }
 
@@ -87,7 +88,7 @@ public class AgenteController {
     public ResponseEntity<AgenteResponse> atualizar(@PathVariable Long id,
                                                     @RequestBody AgenteRequest request) {
         Agente dados = mapper.toDomain(request);
-        Agente atualizado = updateUseCase.executar(id, dados);
+        AgenteEntity atualizado = updateUseCase.executar(id, dados);
         return ResponseEntity.ok(mapper.toResponse(atualizado));
     }
 

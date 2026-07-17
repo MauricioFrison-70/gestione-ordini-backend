@@ -1,7 +1,7 @@
 package com.gestioneOrdini.application.usecase;
 
-import com.gestioneOrdini.domain.model.Agente;
 import com.gestioneOrdini.domain.repository.AgenteRepository;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public class ListAgentiUseCase {
         this.repository = repository;
     }
 
-    public List<Agente> executar() {
+    public List<AgenteEntity> executar() {
         return repository.findAll();
     }
 }
