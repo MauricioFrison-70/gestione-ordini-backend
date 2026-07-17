@@ -1,6 +1,8 @@
 package com.gestioneOrdini.domain.repository;
 
 import com.gestioneOrdini.domain.model.Agente;
+import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +30,9 @@ import java.util.Optional;
  */
 
 public interface AgenteRepository {
-    List<Agente> findAll();
-    Optional<Agente> findById(Long id);
-    Agente salva(Agente agente);
+    List<AgenteEntity> findAll();
+    Optional<AgenteEntity> findById(Long id);
+    AgenteEntity salva(AgenteEntity agente);
     void deleteById(Long id);
 }
 

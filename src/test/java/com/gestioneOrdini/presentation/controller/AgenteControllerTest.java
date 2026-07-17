@@ -30,7 +30,8 @@ class AgenteControllerTest {
         return new AgenteRequest(
                 "Maurizio Test",
                 "maurizio@test.com",
-                TipoAgente.CLIENTE
+                TipoAgente.CLIENTE,
+                true
         );
     }
 
@@ -47,8 +48,7 @@ class AgenteControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        AgenteResponse criado = objectMapper.readValue(response, AgenteResponse.class);
-        return criado.getId();
+        return objectMapper.readTree(response).get("id").asLong();
     }
 
     // ---------------------------------------------------------
@@ -108,6 +108,7 @@ class AgenteControllerTest {
 
         AgenteRequest request = creaAgenteRequestFittizio();
         request.setNome("Nome aggiornato");
+        request.setArchiviato(false);
 
         mockMvc.perform(
                         put("/api/agenti/" + id)

@@ -18,21 +18,17 @@ public class AgenteRepositoryImpl implements AgenteRepository {
     }
 
     @Override
-    public List<Agente> findAll() {
-        return jpa.findAll()
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public List<AgenteEntity> findAll() {
+        return jpa.findAll();
     }
 
     @Override
-    public Optional<Agente> findById(Long id) {
-        return jpa.findById(id)
-                .map(this::toDomain);
+    public Optional<AgenteEntity> findById(Long id) {
+        return jpa.findById(id);
     }
 
     @Override
-    public Agente salva(Agente agente) {
+    public AgenteEntity salva(AgenteEntity agente) {
         AgenteEntity entity;
 
         if (agente.getId() != null) {
@@ -44,38 +40,19 @@ public class AgenteRepositoryImpl implements AgenteRepository {
             entity = new AgenteEntity();
         }
 
-        // Atualizar campos
+        // Atualizar campos da entidade com dados do domínio
         entity.setNome(agente.getNome());
         entity.setEmail(agente.getEmail());
         entity.setTipoAgente(agente.getTipoAgente());
+        entity.setArchiviato(agente.getArchiviato());
 
-        AgenteEntity salvato = jpa.save(entity);
-        return toDomain(salvato);
+        // Persistir e retornar a entidade
+        return jpa.save(entity);
     }
-
 
     @Override
     public void deleteById(Long id) {
         jpa.deleteById(id);
     }
 
-    // Conversão domínio → entidade
-    private AgenteEntity toEntity(Agente agente) {
-        AgenteEntity entity = new AgenteEntity();
-        entity.setId(agente.getId());
-        entity.setNome(agente.getNome());
-        entity.setEmail(agente.getEmail());
-        entity.setTipoAgente(agente.getTipoAgente());
-        return entity;
-    }
-
-    // Conversão entidade → domínio
-    private Agente toDomain(AgenteEntity entity) {
-        return new Agente(
-                entity.getId(),
-                entity.getNome(),
-                entity.getEmail(),
-                entity.getTipoAgente()
-        );
-    }
 }
