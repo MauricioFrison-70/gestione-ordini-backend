@@ -1,8 +1,9 @@
 package com.gestioneOrdini.infrastructure.persistence.repository;
 
-import com.gestioneOrdini.domain.model.Agente;
-import com.gestioneOrdini.domain.repository.AgenteRepository;
+import com.gestioneOrdini.domain.agente.model.Agente;
+import com.gestioneOrdini.domain.agente.repository.AgenteRepository;
 import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
+import com.gestioneOrdini.infrastructure.persistence.mapper.agente.AgenteMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,42 +13,31 @@ import java.util.Optional;
 public class AgenteRepositoryImpl implements AgenteRepository {
 
     private final AgenteJpaRepository jpa;
+    private final AgenteMapper mapper;
 
-    public AgenteRepositoryImpl(AgenteJpaRepository jpa) {
+    public AgenteRepositoryImpl(AgenteJpaRepository jpa, AgenteMapper mapper) {
         this.jpa = jpa;
+        this.mapper = mapper;
     }
 
     @Override
-    public List<AgenteEntity> findAll() {
-        return jpa.findAll();
+    public List<Agente> findAll() {
+        return jpa.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override
-    public Optional<AgenteEntity> findById(Long id) {
-        return jpa.findById(id);
+    public Optional<Agente> findById(Long id) {
+        return jpa.findById(id)
+                .map(mapper::toDomain);
     }
 
     @Override
-    public AgenteEntity salva(AgenteEntity agente) {
-        AgenteEntity entity;
-
-        if (agente.getId() != null) {
-            // Atualização: carregar a entidade existente
-            entity = jpa.findById(agente.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Agente non trovato"));
-        } else {
-            // Criação
-            entity = new AgenteEntity();
-        }
-
-        // Atualizar campos da entidade com dados do domínio
-        entity.setNome(agente.getNome());
-        entity.setEmail(agente.getEmail());
-        entity.setTipoAgente(agente.getTipoAgente());
-        entity.setArchiviato(agente.getArchiviato());
-
-        // Persistir e retornar a entidade
-        return jpa.save(entity);
+    public Agente save(Agente agente) {
+        AgenteEntity entity = mapper.toEntity(agente);
+        AgenteEntity salvato = jpa.save(entity);
+        return mapper.toDomain(salvato);
     }
 
     @Override
@@ -55,4 +45,8 @@ public class AgenteRepositoryImpl implements AgenteRepository {
         jpa.deleteById(id);
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return jpa.existsById(id);
+    }
 }

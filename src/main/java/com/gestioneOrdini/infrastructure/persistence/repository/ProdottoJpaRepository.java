@@ -1,11 +1,10 @@
 package com.gestioneOrdini.infrastructure.persistence.repository;
 
-import com.gestioneOrdini.infrastructure.persistence.entity.AgenteEntity;
+import com.gestioneOrdini.infrastructure.persistence.entity.ProdottoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 /**
- * Repository JPA responsabile della gestione della persistenza per {@link AgenteEntity}.
+ * Repository JPA responsabile della gestione della persistenza per {@link ProdottoEntity}.
  * <p>
  * Questa interfaccia funge da adattatore verso il database, sfruttando le
  * funzionalità fornite da {@link JpaRepository} per operazioni CRUD standard.
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Repository;
  *
  * <p><strong>Responsabilità:</strong></p>
  * <ul>
- *     <li>Fornire accesso alle operazioni CRUD per l'entità {@code AgenteEntity}.</li>
+ *     <li>Fornire accesso alle operazioni CRUD per l'entità {@code ProdottoEntity}.</li>
  *     <li>Permettere l'estensione con query personalizzate, se necessario.</li>
  *     <li>Agire come componente di infrastruttura all'interno dell'architettura esagonale.</li>
  * </ul>
@@ -26,9 +25,6 @@ import org.springframework.stereotype.Repository;
  * </p>
  */
 
-@Repository
-public interface AgenteJpaRepository extends JpaRepository<AgenteEntity, Long> {
+public interface ProdottoJpaRepository extends JpaRepository<ProdottoEntity, Long> {
 }
-
-
 

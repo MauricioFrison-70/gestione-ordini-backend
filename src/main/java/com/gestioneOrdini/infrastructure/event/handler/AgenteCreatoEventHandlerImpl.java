@@ -1,7 +1,7 @@
 package com.gestioneOrdini.infrastructure.event.handler;
 
-import com.gestioneOrdini.domain.event.AgenteCreatoEvent;
-import com.gestioneOrdini.domain.event.handler.AgenteCreatoEventHandler;
+import com.gestioneOrdini.domain.agente.event.AgenteCreatoEvent;
+import com.gestioneOrdini.domain.agente.event.handler.AgenteCreatoEventHandler;
 import org.springframework.stereotype.Service;
 
 @Service
