@@ -1,10 +1,11 @@
 package com.gestioneOrdini.infrastructure.persistence.entity;
 
-import com.gestioneOrdini.domain.model.TipoAgente;
+import com.gestioneOrdini.domain.agente.model.TipoAgente;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Entità JPA che rappresenta un agente nella base dati.
@@ -34,7 +35,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "agenti",
         indexes = {
-                @Index(name = "idx_agenti_nome", columnList = "name")
+                @Index(name = "idx_agenti_name", columnList = "name")
         })
 
 public class AgenteEntity {
@@ -58,34 +59,89 @@ public class AgenteEntity {
     private Boolean archiviato = false;
 
     @CreationTimestamp
-    @Column(name="created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime dataRegistrazione;
 
-    public AgenteEntity() {}
+    public AgenteEntity() {
+    }
 
-    public AgenteEntity(Long id, String nome, String email, TipoAgente tipoAgente, Boolean archiviato) {
+    public AgenteEntity(
+            Long id,
+            String nome,
+            String email,
+            TipoAgente tipoAgente,
+            Boolean archiviato
+    ) {
+        this(id, nome, email, tipoAgente, archiviato, null);
+    }
+
+    public AgenteEntity(
+            Long id,
+            String nome,
+            String email,
+            TipoAgente tipoAgente,
+            Boolean archiviato,
+            LocalDateTime dataRegistrazione
+    ) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.tipoAgente = tipoAgente;
         this.archiviato = archiviato;
+        this.dataRegistrazione = dataRegistrazione;
     }
 
-    public AgenteEntity(Long id, String nome, String email, TipoAgente tipoAgente) {
-        this(id, nome, email, tipoAgente, false);
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public String getNome() { return nome; }
-    public String getEmail() { return email; }
-    public TipoAgente getTipoAgente() { return tipoAgente; }
-    public Boolean getArchiviato() { return archiviato; }
-    public LocalDateTime getDataRegistrazione() {return dataRegistrazione; }
+    public String getNome() {
+        return nome;
+    }
 
-    public void setId(Long id) { this.id = id; }
-    public void setNome(String nome) { this.nome = nome; }
-    public void setEmail(String email) { this.email = email; }
-    public void setTipoAgente(TipoAgente tipoAgente) { this.tipoAgente = tipoAgente; }
-    public void setArchiviato(Boolean archiviato) { this.archiviato = archiviato; }
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public TipoAgente getTipoAgente() {
+        return tipoAgente;
+    }
+
+    public Boolean getArchiviato() {
+        return archiviato;
+    }
+
+    public void setArchiviato(Boolean archiviato) {
+        this.archiviato = archiviato;
+    }
+
+    public LocalDateTime getDataRegistrazione() {
+        return dataRegistrazione;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AgenteEntity that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "AgenteEntity{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }
 

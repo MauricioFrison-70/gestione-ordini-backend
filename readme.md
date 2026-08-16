@@ -12,6 +12,11 @@ com.projectJava
 ├── repository           → Interfacce di accesso ai dati
 └── service              → Servizi applicativi
 
+## 📘 Documentazione
+- Architettura del progetto
+- Checklist per la creazione di nuovi moduli (DDD + Hexagonal):  
+  [docs/checklists/nuovo-modulo-ddd.md](docs/checklists/nuovo-modulo-ddd.md)
+- 
 ## 🚀 Tecnologie Utilizzate
 - Java 17
 - Spring Boot 3.3.4
