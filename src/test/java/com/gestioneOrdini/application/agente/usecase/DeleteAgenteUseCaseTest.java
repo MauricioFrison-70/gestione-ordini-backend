@@ -1,6 +1,8 @@
 package com.gestioneOrdini.application.agente.usecase;
 
+import com.gestioneOrdini.domain.agente.exception.AgenteUtilizzatoException;
 import com.gestioneOrdini.domain.agente.repository.AgenteRepository;
+import com.gestioneOrdini.domain.ordine.repository.OrdineVenditaRepository;
 import com.gestioneOrdini.domain.shared.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,12 +23,14 @@ import static org.mockito.Mockito.*;
 class DeleteAgenteUseCaseTest {
 
     private AgenteRepository repository;
+    private OrdineVenditaRepository ordineVenditaRepository;
     private DeleteAgenteUseCase useCase;
 
     @BeforeEach
     void setUp() {
         repository = mock(AgenteRepository.class);
-        useCase = new DeleteAgenteUseCase(repository);
+        ordineVenditaRepository = mock(OrdineVenditaRepository.class);
+        useCase = new DeleteAgenteUseCase(repository, ordineVenditaRepository);
     }
 
     @Test
@@ -62,6 +66,16 @@ class DeleteAgenteUseCaseTest {
         assertEquals("Agente con id " + id + " non trovato", ex.getMessage());
 
         // Verifica che deleteById NON sia stato chiamato
+        verify(repository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void deveImpedireEliminazioneQuandoAgenteUtilizzatoInOrdine() {
+        when(repository.existsById(1L)).thenReturn(true);
+        when(ordineVenditaRepository.existsByAgenteId(1L)).thenReturn(true);
+
+        assertThrows(AgenteUtilizzatoException.class, () -> useCase.eseguire(1L));
+
         verify(repository, never()).deleteById(anyLong());
     }
 }

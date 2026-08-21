@@ -39,6 +39,28 @@ class ProdottoTest {
     }
 
     @Test
+    void dovrebbeAccettareCodiceEDescrizioneAlLimiteMassimo() {
+        Prodotto prodotto = new Prodotto(
+                "ABC123",
+                "D".repeat(30),
+                new BigDecimal("10.00"),
+                new BigDecimal("15.00"),
+                1,
+                0,
+                false
+        );
+
+        assertThat(prodotto.getCodice()).hasSize(6);
+        assertThat(prodotto.getDescrizione()).hasSize(30);
+    }
+
+    @Test
+    void dovrebbeRifiutareCodiceODescrizioneOltreLaLunghezzaMassima() {
+        assertThatCodiceNonValidoVengaRifiutato("ABC1234");
+        assertThatDescrizioneNonValidaVengaRifiutata("D".repeat(31));
+    }
+
+    @Test
     void dovrebbeRifiutareValoriDiAcquistoOVenditaNulliONegativi() {
         assertThatValoreAcquistoNonValidoVengaRifiutato(null);
         assertThatValoreAcquistoNonValidoVengaRifiutato(new BigDecimal("-0.01"));

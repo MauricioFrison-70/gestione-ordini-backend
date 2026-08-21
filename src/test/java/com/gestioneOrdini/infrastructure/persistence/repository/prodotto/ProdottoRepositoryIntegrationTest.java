@@ -7,7 +7,7 @@ import com.gestioneOrdini.infrastructure.persistence.repository.ProdottoJpaRepos
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.gestioneOrdini.domain.prodotto.exception.CodiceProdottoDuplicatoException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -108,7 +108,7 @@ class ProdottoRepositoryIntegrationTest extends AbstractSqlServerIntegrationTest
             repository.save(nuovoProdotto("P001"));
             jpaRepository.flush();
         })
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(CodiceProdottoDuplicatoException.class);
     }
 
     private Prodotto nuovoProdotto(String codice) {

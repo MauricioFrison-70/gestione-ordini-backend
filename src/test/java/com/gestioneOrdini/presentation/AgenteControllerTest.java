@@ -6,6 +6,7 @@ import com.gestioneOrdini.application.agente.dto.AgenteResponse;
 import com.gestioneOrdini.application.agente.usecase.*;
 import com.gestioneOrdini.domain.agente.model.Agente;
 import com.gestioneOrdini.domain.agente.model.TipoAgente;
+import com.gestioneOrdini.domain.agente.exception.AgenteUtilizzatoException;
 import com.gestioneOrdini.domain.shared.EntityNotFoundException;
 import com.gestioneOrdini.infrastructure.persistence.mapper.agente.AgenteMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,8 @@ class AgenteControllerTest {
     private GetAgenteUseCase getUseCase;
     @MockBean
     private ListAgentiUseCase listUseCase;
+    @MockBean
+    private CheckAgenteUtilizzatoUseCase checkUtilizzatoUseCase;
     @MockBean
     private AgenteMapper mapper;
 
@@ -157,6 +160,27 @@ class AgenteControllerTest {
 
         mockMvc.perform(delete("/api/agenti/1"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deveRitornareConflittoQuandoAgenteUtilizzatoInOrdine() throws Exception {
+        Mockito.doThrow(new AgenteUtilizzatoException()).when(deleteUseCase).eseguire(1L);
+
+        mockMvc.perform(delete("/api/agenti/1"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codice").value("AGENTE_UTILIZZATO"))
+                .andExpect(jsonPath("$.errore").value(
+                        "L'agente è utilizzato in uno o più ordini di vendita. "
+                                + "Vuoi archiviarlo o annullare l'eliminazione?"));
+    }
+
+    @Test
+    void deveVerificareUtilizzoPrimaDellEliminazione() throws Exception {
+        Mockito.when(checkUtilizzatoUseCase.eseguire(1L)).thenReturn(true);
+
+        mockMvc.perform(get("/api/agenti/1/utilizzo-ordini"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.utilizzato").value(true));
     }
 
     @Test

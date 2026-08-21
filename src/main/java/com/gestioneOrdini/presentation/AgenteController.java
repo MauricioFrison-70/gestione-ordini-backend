@@ -2,6 +2,7 @@ package com.gestioneOrdini.presentation;
 
 import com.gestioneOrdini.application.agente.dto.AgenteRequest;
 import com.gestioneOrdini.application.agente.dto.AgenteResponse;
+import com.gestioneOrdini.application.agente.dto.AgenteUtilizzoResponse;
 import com.gestioneOrdini.application.agente.usecase.*;
 import com.gestioneOrdini.infrastructure.persistence.mapper.agente.AgenteMapper;
 import jakarta.validation.Valid;
@@ -29,19 +30,22 @@ public class AgenteController {
     private final GetAgenteUseCase getUseCase;
     private final ListAgentiUseCase listUseCase;
     private final AgenteMapper mapper;
+    private final CheckAgenteUtilizzatoUseCase checkUtilizzatoUseCase;
 
     public AgenteController(CreateAgenteUseCase createUseCase,
                             UpdateAgenteUseCase updateUseCase,
                             DeleteAgenteUseCase deleteUseCase,
                             GetAgenteUseCase getUseCase,
                             ListAgentiUseCase listUseCase,
-                            AgenteMapper mapper) {
+                            AgenteMapper mapper,
+                            CheckAgenteUtilizzatoUseCase checkUtilizzatoUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.deleteUseCase = deleteUseCase;
         this.getUseCase = getUseCase;
         this.listUseCase = listUseCase;
         this.mapper = mapper;
+        this.checkUtilizzatoUseCase = checkUtilizzatoUseCase;
     }
 
     @PostMapping
@@ -81,5 +85,10 @@ public class AgenteController {
     public ResponseEntity<Void> eliminare(@PathVariable Long id) {
         deleteUseCase.eseguire(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/utilizzo-ordini")
+    public ResponseEntity<AgenteUtilizzoResponse> verificareUtilizzo(@PathVariable Long id) {
+        return ResponseEntity.ok(new AgenteUtilizzoResponse(checkUtilizzatoUseCase.eseguire(id)));
     }
 }

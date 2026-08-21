@@ -4,6 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -20,9 +21,11 @@ import java.math.BigDecimal;
 public record ProdottoRequest(
 
         @NotBlank(message = "Il codice è obbligatorio")
+        @Size(max = 6, message = "Il codice non può superare 6 caratteri")
         String codice,
 
         @NotBlank(message = "La descrizione è obbligatoria")
+        @Size(max = 30, message = "La descrizione non può superare 30 caratteri")
         String descrizione,
 
         @NotNull(message = "Il valore di acquisto è obbligatorio")

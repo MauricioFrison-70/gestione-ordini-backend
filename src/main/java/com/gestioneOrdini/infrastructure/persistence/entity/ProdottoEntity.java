@@ -46,10 +46,10 @@ public class ProdottoEntity {
     private Long id;
 
 
-    @Column(name = "code", nullable = false, unique = true, updatable = false)
+    @Column(name = "code", nullable = false, unique = true, updatable = false, length = 6)
     private String codice;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, length = 30)
     private String descrizione;
 
     @Column(name = "purchase_value", nullable = false, precision = 10, scale = 2)
