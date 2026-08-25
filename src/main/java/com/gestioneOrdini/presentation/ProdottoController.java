@@ -75,7 +75,7 @@ public class ProdottoController {
     public ResponseEntity<ProdottoResponse> aggiornare(@PathVariable Long id,
                                                        @Valid @RequestBody ProdottoUpdateRequest request) {
         var prodottoEsistente = getUseCase.eseguire(id);
-        var dati = mapper.toDomain(request, prodottoEsistente.getCodice());
+        var dati = mapper.toDomain(request, prodottoEsistente);
         var aggiornato = updateUseCase.eseguire(id, dati);
         return ResponseEntity.ok(mapper.toResponse(aggiornato));
     }

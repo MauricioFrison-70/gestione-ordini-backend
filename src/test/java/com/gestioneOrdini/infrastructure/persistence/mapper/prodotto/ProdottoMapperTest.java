@@ -24,7 +24,6 @@ class ProdottoMapperTest {
                 "Notebook Dell",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -36,7 +35,7 @@ class ProdottoMapperTest {
         assertEquals("Notebook Dell", domain.getDescrizione());
         assertEquals(new BigDecimal("1500.00"), domain.getValoreAcquisto());
         assertEquals(new BigDecimal("2200.00"), domain.getValoreVendita());
-        assertEquals(10, domain.getQuantita());
+        assertEquals(0, domain.getQuantita());
         assertEquals(2, domain.getScortaMinima());
         assertFalse(domain.getArchiviato());
     }
@@ -128,24 +127,33 @@ class ProdottoMapperTest {
     }
 
     @Test
-    void deveMappareRequestDiAggiornamentoPreservandoCodice() {
+    void deveMappareRequestDiAggiornamentoPreservandoCodiceEGiacenza() {
         ProdottoUpdateRequest request = new ProdottoUpdateRequest(
                 "Notebook Dell aggiornato",
                 new BigDecimal("1600.00"),
                 new BigDecimal("2300.00"),
-                15,
                 3,
                 true
         );
+        Prodotto esistente = new Prodotto(
+                1L,
+                "P001",
+                "Notebook Dell",
+                new BigDecimal("1500.00"),
+                new BigDecimal("2200.00"),
+                10,
+                2,
+                false
+        );
 
-        Prodotto domain = mapper.toDomain(request, "P001");
+        Prodotto domain = mapper.toDomain(request, esistente);
 
         assertNull(domain.getId());
         assertEquals("P001", domain.getCodice());
         assertEquals("Notebook Dell aggiornato", domain.getDescrizione());
         assertEquals(new BigDecimal("1600.00"), domain.getValoreAcquisto());
         assertEquals(new BigDecimal("2300.00"), domain.getValoreVendita());
-        assertEquals(15, domain.getQuantita());
+        assertEquals(10, domain.getQuantita());
         assertEquals(3, domain.getScortaMinima());
         assertTrue(domain.getArchiviato());
     }

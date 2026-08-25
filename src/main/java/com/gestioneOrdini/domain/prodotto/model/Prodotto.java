@@ -5,12 +5,11 @@ import java.time.LocalDateTime;
 
 /**
  * Modello di dominio che rappresenta un prodotto nel sistema.
- * <p>
- * Contiene le informazioni principali utilizzate dai casi d'uso,
- * mantenendo il dominio indipendente dalla persistenza.
- * </p>
  */
 public class Prodotto {
+
+    public static final int LUNGHEZZA_MASSIMA_CODICE = 6;
+    public static final int LUNGHEZZA_MASSIMA_DESCRIZIONE = 30;
 
     private final Long id;
     private final String codice;
@@ -22,38 +21,38 @@ public class Prodotto {
     private Boolean archiviato = false;
     private final LocalDateTime dataRegistrazione;
 
-    /**
-     * Costruttore completo, utilizzato per ricostruire il modello
-     * a partire da dati già persistiti.
-     */
-    public Prodotto(Long id,
-                    String codice,
-                    String descrizione,
-                    BigDecimal valoreAcquisto,
-                    BigDecimal valoreVendita,
-                    Integer quantita,
-                    Integer scortaMinima,
-                    Boolean archiviato) {
+    public Prodotto(
+            Long id,
+            String codice,
+            String descrizione,
+            BigDecimal valoreAcquisto,
+            BigDecimal valoreVendita,
+            Integer quantita,
+            Integer scortaMinima,
+            Boolean archiviato
+    ) {
         this(id, codice, descrizione, valoreAcquisto, valoreVendita, quantita,
                 scortaMinima, archiviato, null);
     }
 
-    /**
-     * Ricostruisce un prodotto già persistito, inclusa la data di registrazione
-     * assegnata dall'infrastruttura di persistenza.
-     */
-    public Prodotto(Long id,
-                    String codice,
-                    String descrizione,
-                    BigDecimal valoreAcquisto,
-                    BigDecimal valoreVendita,
-                    Integer quantita,
-                    Integer scortaMinima,
-                    Boolean archiviato,
-                    LocalDateTime dataRegistrazione) {
-
+    public Prodotto(
+            Long id,
+            String codice,
+            String descrizione,
+            BigDecimal valoreAcquisto,
+            BigDecimal valoreVendita,
+            Integer quantita,
+            Integer scortaMinima,
+            Boolean archiviato,
+            LocalDateTime dataRegistrazione
+    ) {
         this.id = id;
-        this.codice = validaTestoObbligatorio(codice, "Il codice è obbligatorio");
+        this.codice = validaTestoObbligatorioELunghezzaMassima(
+                codice,
+                "Il codice è obbligatorio",
+                "Il codice non può superare " + LUNGHEZZA_MASSIMA_CODICE + " caratteri",
+                LUNGHEZZA_MASSIMA_CODICE
+        );
         setDescrizione(descrizione);
         setValoreAcquisto(valoreAcquisto);
         setValoreVendita(valoreVendita);
@@ -63,17 +62,15 @@ public class Prodotto {
         this.dataRegistrazione = dataRegistrazione;
     }
 
-    /**
-     * Costruttore per nuovi prodotti non ancora persistiti.
-     */
-    public Prodotto(String codice,
-                    String descrizione,
-                    BigDecimal valoreAcquisto,
-                    BigDecimal valoreVendita,
-                    Integer quantita,
-                    Integer scortaMinima,
-                    Boolean archiviato) {
-
+    public Prodotto(
+            String codice,
+            String descrizione,
+            BigDecimal valoreAcquisto,
+            BigDecimal valoreVendita,
+            Integer quantita,
+            Integer scortaMinima,
+            Boolean archiviato
+    ) {
         this(null, codice, descrizione, valoreAcquisto, valoreVendita,
                 quantita, scortaMinima, archiviato);
     }
@@ -91,7 +88,12 @@ public class Prodotto {
     }
 
     public void setDescrizione(String descrizione) {
-        this.descrizione = validaTestoObbligatorio(descrizione, "La descrizione è obbligatoria");
+        this.descrizione = validaTestoObbligatorioELunghezzaMassima(
+                descrizione,
+                "La descrizione è obbligatoria",
+                "La descrizione non può superare " + LUNGHEZZA_MASSIMA_DESCRIZIONE + " caratteri",
+                LUNGHEZZA_MASSIMA_DESCRIZIONE
+        );
     }
 
     public BigDecimal getValoreAcquisto() {
@@ -121,6 +123,31 @@ public class Prodotto {
         this.quantita = quantita;
     }
 
+    public void incrementaQuantita(Integer quantitaRicevuta) {
+        if (quantitaRicevuta == null || quantitaRicevuta <= 0) {
+            throw new IllegalArgumentException(
+                    "La quantità ricevuta deve essere maggiore di zero");
+        }
+        try {
+            setQuantita(Math.addExact(this.quantita, quantitaRicevuta));
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException(
+                    "La quantità in magazzino supera il limite consentito", ex);
+        }
+    }
+
+    public void decrementaQuantita(Integer quantitaVenduta) {
+        if (quantitaVenduta == null || quantitaVenduta <= 0) {
+            throw new IllegalArgumentException(
+                    "La quantità venduta deve essere maggiore di zero");
+        }
+        if (this.quantita < quantitaVenduta) {
+            throw new IllegalArgumentException(
+                    "La quantità disponibile non è sufficiente");
+        }
+        setQuantita(this.quantita - quantitaVenduta);
+    }
+
     public Integer getScortaMinima() {
         return scortaMinima;
     }
@@ -142,9 +169,17 @@ public class Prodotto {
         return dataRegistrazione;
     }
 
-    private static String validaTestoObbligatorio(String valore, String messaggio) {
+    private static String validaTestoObbligatorioELunghezzaMassima(
+            String valore,
+            String messaggioObbligatorio,
+            String messaggioLunghezza,
+            int lunghezzaMassima
+    ) {
         if (valore == null || valore.isBlank()) {
-            throw new IllegalArgumentException(messaggio);
+            throw new IllegalArgumentException(messaggioObbligatorio);
+        }
+        if (valore.length() > lunghezzaMassima) {
+            throw new IllegalArgumentException(messaggioLunghezza);
         }
         return valore;
     }

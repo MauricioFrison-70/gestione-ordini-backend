@@ -7,7 +7,7 @@ import com.gestioneOrdini.infrastructure.persistence.repository.ProdottoJpaRepos
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.gestioneOrdini.domain.prodotto.exception.CodiceProdottoDuplicatoException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -30,6 +30,7 @@ class ProdottoRepositoryIntegrationTest extends AbstractSqlServerIntegrationTest
         Prodotto salvato = repository.save(nuovoProdotto("P001"));
 
         Prodotto trovato = repository.findById(salvato.getId()).orElseThrow();
+        Prodotto trovatoPerCodice = repository.findByCodice("P001").orElseThrow();
 
         assertThat(salvato.getId()).isNotNull();
         assertThat(trovato.getCodice()).isEqualTo("P001");
@@ -40,11 +41,22 @@ class ProdottoRepositoryIntegrationTest extends AbstractSqlServerIntegrationTest
         assertThat(trovato.getScortaMinima()).isEqualTo(2);
         assertThat(trovato.getArchiviato()).isFalse();
         assertThat(trovato.getDataRegistrazione()).isNotNull();
+        assertThat(trovatoPerCodice.getId()).isEqualTo(salvato.getId());
     }
 
     @Test
     void dovrebbeRestituireVuotoQuandoProdottoNonEsiste() {
         assertThat(repository.findById(Long.MAX_VALUE)).isEmpty();
+    }
+
+    @Test
+    void dovrebbeRecuperareProdottoConBloccoPerAggiornamento() {
+        Prodotto salvato = repository.save(nuovoProdotto("P003"));
+
+        Prodotto bloccato = repository.findByIdForUpdate(salvato.getId()).orElseThrow();
+
+        assertThat(bloccato.getId()).isEqualTo(salvato.getId());
+        assertThat(bloccato.getQuantita()).isEqualTo(10);
     }
 
     @Test
@@ -108,7 +120,7 @@ class ProdottoRepositoryIntegrationTest extends AbstractSqlServerIntegrationTest
             repository.save(nuovoProdotto("P001"));
             jpaRepository.flush();
         })
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(CodiceProdottoDuplicatoException.class);
     }
 
     private Prodotto nuovoProdotto(String codice) {

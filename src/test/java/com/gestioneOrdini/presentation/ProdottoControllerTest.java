@@ -6,6 +6,7 @@ import com.gestioneOrdini.application.prodotto.dto.ProdottoResponse;
 import com.gestioneOrdini.application.prodotto.dto.ProdottoUpdateRequest;
 import com.gestioneOrdini.application.prodotto.usecase.*;
 import com.gestioneOrdini.domain.prodotto.model.Prodotto;
+import com.gestioneOrdini.domain.prodotto.exception.CodiceProdottoDuplicatoException;
 import com.gestioneOrdini.domain.shared.EntityNotFoundException;
 import com.gestioneOrdini.infrastructure.persistence.mapper.prodotto.ProdottoMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +85,6 @@ class ProdottoControllerTest {
                 "Notebook Dell",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -93,7 +93,6 @@ class ProdottoControllerTest {
                 "Notebook Dell aggiornato",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -164,7 +163,7 @@ class ProdottoControllerTest {
     void deveAggiornareProdotto() throws Exception {
 
         Mockito.when(getUseCase.eseguire(1L)).thenReturn(prodotto);
-        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq("P001"))).thenReturn(prodotto);
+        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq(prodotto))).thenReturn(prodotto);
         Mockito.when(updateUseCase.eseguire(eq(1L), any())).thenReturn(prodotto);
         Mockito.when(mapper.toResponse(any())).thenReturn(response);
 
@@ -201,7 +200,6 @@ class ProdottoControllerTest {
                 null,
                 null,
                 null,
-                null,
                 false
         );
 
@@ -212,13 +210,71 @@ class ProdottoControllerTest {
     }
 
     @Test
+    void deveRitornareConflittoQuandoCodiceProdottoEDuplicato() throws Exception {
+        Mockito.when(mapper.toDomain(any(ProdottoRequest.class))).thenReturn(prodotto);
+        Mockito.when(createUseCase.eseguire(any()))
+                .thenThrow(new CodiceProdottoDuplicatoException("P001", new RuntimeException()));
+
+        mockMvc.perform(post("/api/prodotti")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapperJson.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errore").value("Esiste già un prodotto con il codice 'P001'."));
+    }
+
+    @Test
+    void deveRitornareBadRequestQuandoCodiceODescrizioneSuperanoILimite() throws Exception {
+        ProdottoRequest codiceTroppoLungo = new ProdottoRequest(
+                "ABC1234",
+                "Descrizione valida",
+                new BigDecimal("10.00"),
+                new BigDecimal("20.00"),
+                0,
+                false
+        );
+        ProdottoRequest descrizioneTroppoLunga = new ProdottoRequest(
+                "ABC123",
+                "D".repeat(31),
+                new BigDecimal("10.00"),
+                new BigDecimal("20.00"),
+                0,
+                false
+        );
+
+        mockMvc.perform(post("/api/prodotti")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapperJson.writeValueAsString(codiceTroppoLungo)))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/prodotti")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapperJson.writeValueAsString(descrizioneTroppoLunga)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void deveRitornareBadRequestQuandoDescrizioneDiAggiornamentoEVuota() throws Exception {
 
         ProdottoUpdateRequest invalido = new ProdottoUpdateRequest(
                 "",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
+                2,
+                false
+        );
+
+        mockMvc.perform(put("/api/prodotti/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapperJson.writeValueAsString(invalido)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deveRitornareBadRequestQuandoDescrizioneDiAggiornamentoSuperaILimite() throws Exception {
+        ProdottoUpdateRequest invalido = new ProdottoUpdateRequest(
+                "D".repeat(31),
+                new BigDecimal("1500.00"),
+                new BigDecimal("2200.00"),
                 2,
                 false
         );
@@ -236,7 +292,6 @@ class ProdottoControllerTest {
                 "Notebook Dell aggiornato",
                 new BigDecimal("-0.01"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -254,7 +309,6 @@ class ProdottoControllerTest {
                 {
                   "valoreAcquisto": 1500.00,
                   "valoreVendita": 2200.00,
-                  "quantita": 10,
                   "scortaMinima": 2,
                   "archiviato": false
                 }
@@ -267,7 +321,7 @@ class ProdottoControllerTest {
     }
 
     @Test
-    void deveIgnorareCodiceInviatoNellAggiornamento() throws Exception {
+    void deveIgnorareCodiceEQuantitaInviatiNellAggiornamento() throws Exception {
 
         String richiestaConCodice = """
                 {
@@ -275,14 +329,14 @@ class ProdottoControllerTest {
                   "descrizione": "Notebook Dell aggiornato",
                   "valoreAcquisto": 1500.00,
                   "valoreVendita": 2200.00,
-                  "quantita": 10,
+                  "quantita": 999,
                   "scortaMinima": 2,
                   "archiviato": false
                 }
                 """;
 
         Mockito.when(getUseCase.eseguire(1L)).thenReturn(prodotto);
-        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq("P001"))).thenReturn(prodotto);
+        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq(prodotto))).thenReturn(prodotto);
         Mockito.when(updateUseCase.eseguire(1L, prodotto)).thenReturn(prodotto);
         Mockito.when(mapper.toResponse(prodotto)).thenReturn(response);
 
@@ -290,9 +344,10 @@ class ProdottoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(richiestaConCodice))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.codice").value("P001"));
+                .andExpect(jsonPath("$.codice").value("P001"))
+                .andExpect(jsonPath("$.quantita").value(10));
 
-        Mockito.verify(mapper).toDomain(any(ProdottoUpdateRequest.class), eq("P001"));
+        Mockito.verify(mapper).toDomain(any(ProdottoUpdateRequest.class), eq(prodotto));
     }
 
     @Test

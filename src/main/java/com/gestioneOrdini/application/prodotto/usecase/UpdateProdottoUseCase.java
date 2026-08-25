@@ -37,7 +37,7 @@ public class UpdateProdottoUseCase {
         esistente.setDescrizione(datiAggiornati.getDescrizione());
         esistente.setValoreAcquisto(datiAggiornati.getValoreAcquisto());
         esistente.setValoreVendita(datiAggiornati.getValoreVendita());
-        esistente.setQuantita(datiAggiornati.getQuantita());
+        // La giacenza è gestita esclusivamente dagli ordini di acquisto e di vendita.
         esistente.setScortaMinima(datiAggiornati.getScortaMinima());
         esistente.setArchiviato(datiAggiornati.getArchiviato());
         return repository.save(esistente);

@@ -10,6 +10,34 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 class ProdottoTest {
 
     @Test
+    void dovrebbeIncrementareLaGiacenzaRicevuta() {
+        Prodotto prodotto = nuovoProdotto();
+
+        prodotto.incrementaQuantita(5);
+
+        assertThat(prodotto.getQuantita()).isEqualTo(15);
+    }
+
+    @Test
+    void dovrebbeDecrementareLaGiacenzaVenduta() {
+        Prodotto prodotto = nuovoProdotto();
+
+        prodotto.decrementaQuantita(4);
+
+        assertThat(prodotto.getQuantita()).isEqualTo(6);
+    }
+
+    @Test
+    void dovrebbeRifiutareVenditaConQuantitaSuperioreAllaGiacenza() {
+        Prodotto prodotto = nuovoProdotto();
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> prodotto.decrementaQuantita(11))
+                .withMessageContaining("non è sufficiente");
+        assertThat(prodotto.getQuantita()).isEqualTo(10);
+    }
+
+    @Test
     void dovrebbeCreareProdottoConDatiValidi() {
         Prodotto prodotto = nuovoProdotto();
 
@@ -36,6 +64,28 @@ class ProdottoTest {
         assertThatDescrizioneNonValidaVengaRifiutata(null);
         assertThatDescrizioneNonValidaVengaRifiutata("");
         assertThatDescrizioneNonValidaVengaRifiutata("   ");
+    }
+
+    @Test
+    void dovrebbeAccettareCodiceEDescrizioneAlLimiteMassimo() {
+        Prodotto prodotto = new Prodotto(
+                "ABC123",
+                "D".repeat(30),
+                new BigDecimal("10.00"),
+                new BigDecimal("15.00"),
+                1,
+                0,
+                false
+        );
+
+        assertThat(prodotto.getCodice()).hasSize(6);
+        assertThat(prodotto.getDescrizione()).hasSize(30);
+    }
+
+    @Test
+    void dovrebbeRifiutareCodiceODescrizioneOltreLaLunghezzaMassima() {
+        assertThatCodiceNonValidoVengaRifiutato("ABC1234");
+        assertThatDescrizioneNonValidaVengaRifiutata("D".repeat(31));
     }
 
     @Test

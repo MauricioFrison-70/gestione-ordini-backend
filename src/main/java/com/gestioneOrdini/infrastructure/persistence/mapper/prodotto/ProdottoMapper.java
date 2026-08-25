@@ -36,19 +36,19 @@ public class ProdottoMapper {
                 request.descrizione(),
                 request.valoreAcquisto(),
                 request.valoreVendita(),
-                request.quantita(),
+                0,
                 request.scortaMinima(),
                 request.archiviato()
         );
     }
 
-    public Prodotto toDomain(ProdottoUpdateRequest request, String codice) {
+    public Prodotto toDomain(ProdottoUpdateRequest request, Prodotto prodottoEsistente) {
         return new Prodotto(
-                codice,
+                prodottoEsistente.getCodice(),
                 request.descrizione(),
                 request.valoreAcquisto(),
                 request.valoreVendita(),
-                request.quantita(),
+                prodottoEsistente.getQuantita(),
                 request.scortaMinima(),
                 request.archiviato()
         );

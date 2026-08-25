@@ -1,6 +1,9 @@
 package com.gestioneOrdini.application.agente.usecase;
 
+import com.gestioneOrdini.domain.agente.exception.AgenteUtilizzatoException;
 import com.gestioneOrdini.domain.agente.repository.AgenteRepository;
+import com.gestioneOrdini.domain.acquisto.repository.OrdineAcquistoRepository;
+import com.gestioneOrdini.domain.ordine.repository.OrdineVenditaRepository;
 import com.gestioneOrdini.domain.shared.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +18,15 @@ import org.springframework.stereotype.Service;
 public class DeleteAgenteUseCase {
 
     private final AgenteRepository repository;
+    private final OrdineVenditaRepository ordineVenditaRepository;
+    private final OrdineAcquistoRepository ordineAcquistoRepository;
 
-    public DeleteAgenteUseCase(AgenteRepository repository) {
+    public DeleteAgenteUseCase(AgenteRepository repository,
+                               OrdineVenditaRepository ordineVenditaRepository,
+                               OrdineAcquistoRepository ordineAcquistoRepository) {
         this.repository = repository;
+        this.ordineVenditaRepository = ordineVenditaRepository;
+        this.ordineAcquistoRepository = ordineAcquistoRepository;
     }
 
     /**
@@ -30,6 +39,11 @@ public class DeleteAgenteUseCase {
 
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Agente", id);
+        }
+
+        if (ordineVenditaRepository.existsByAgenteId(id)
+                || ordineAcquistoRepository.existsByFornitoreId(id)) {
+            throw new AgenteUtilizzatoException();
         }
 
         repository.deleteById(id);
