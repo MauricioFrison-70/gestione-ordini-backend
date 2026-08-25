@@ -1,5 +1,6 @@
 package com.gestioneOrdini.application.ordine.usecase;
 
+import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaAnnullatoException;
 import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaRilasciatoException;
 import com.gestioneOrdini.domain.ordine.model.OrdineVendita;
 import com.gestioneOrdini.domain.ordine.repository.OrdineVenditaRepository;
@@ -21,6 +22,9 @@ public class DeleteOrdineVenditaUseCase {
                 .orElseThrow(() -> new EntityNotFoundException("Ordine di vendita", id));
         if (ordine.getDataRilascio() != null) {
             throw new OrdineVenditaRilasciatoException(ordine.getNumeroOrdine());
+        }
+        if (ordine.getDataAnnullamento() != null) {
+            throw new OrdineVenditaAnnullatoException(ordine.getNumeroOrdine());
         }
         repository.deleteById(id);
     }

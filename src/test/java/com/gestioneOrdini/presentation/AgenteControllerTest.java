@@ -170,7 +170,7 @@ class AgenteControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codice").value("AGENTE_UTILIZZATO"))
                 .andExpect(jsonPath("$.errore").value(
-                        "L'agente è utilizzato in uno o più ordini di vendita. "
+                        "L'agente è utilizzato in uno o più ordini. "
                                 + "Vuoi archiviarlo o annullare l'eliminazione?"));
     }
 

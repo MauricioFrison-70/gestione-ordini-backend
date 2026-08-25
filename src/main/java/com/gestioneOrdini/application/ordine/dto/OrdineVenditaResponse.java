@@ -10,5 +10,6 @@ public record OrdineVenditaResponse(
         AgenteRiferimentoResponse venditore,
         AgenteRiferimentoResponse trasportatore,
         LocalDateTime dataRegistrazione,
-        LocalDate dataRilascio
+        LocalDate dataRilascio,
+        LocalDate dataAnnullamento
 ) {}

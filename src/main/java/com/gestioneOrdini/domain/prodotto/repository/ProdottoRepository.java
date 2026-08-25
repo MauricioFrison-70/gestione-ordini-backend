@@ -33,6 +33,10 @@ public interface ProdottoRepository {
 
     Optional<Prodotto> findById(Long id);
 
+    Optional<Prodotto> findByIdForUpdate(Long id);
+
+    Optional<Prodotto> findByCodice(String codice);
+
     Prodotto save(Prodotto prodotto);
 
     void deleteById(Long id);

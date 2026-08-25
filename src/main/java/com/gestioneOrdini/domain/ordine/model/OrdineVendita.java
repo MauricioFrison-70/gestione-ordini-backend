@@ -2,6 +2,7 @@ package com.gestioneOrdini.domain.ordine.model;
 
 import com.gestioneOrdini.domain.agente.model.Agente;
 import com.gestioneOrdini.domain.agente.model.TipoAgente;
+import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaNonModificabileException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,22 +17,39 @@ public class OrdineVendita {
     private Agente trasportatore;
     private final LocalDateTime dataRegistrazione;
     private LocalDate dataRilascio;
+    private LocalDate dataAnnullamento;
+
+    public OrdineVendita(Agente cliente, Agente venditore, Agente trasportatore) {
+        this(null, null, cliente, venditore, trasportatore, null, null, null);
+    }
 
     public OrdineVendita(Agente cliente, Agente venditore, Agente trasportatore,
                          LocalDate dataRilascio) {
-        this(null, null, cliente, venditore, trasportatore, null, dataRilascio);
+        this(null, null, cliente, venditore, trasportatore, null, dataRilascio, null);
     }
 
     public OrdineVendita(Long id, String numeroOrdine, Agente cliente, Agente venditore,
                          Agente trasportatore, LocalDateTime dataRegistrazione,
                          LocalDate dataRilascio) {
+        this(id, numeroOrdine, cliente, venditore, trasportatore,
+                dataRegistrazione, dataRilascio, null);
+    }
+
+    public OrdineVendita(Long id, String numeroOrdine, Agente cliente, Agente venditore,
+                         Agente trasportatore, LocalDateTime dataRegistrazione,
+                         LocalDate dataRilascio, LocalDate dataAnnullamento) {
         this.id = id;
         this.numeroOrdine = numeroOrdine;
         setCliente(cliente);
         setVenditore(venditore);
         setTrasportatore(trasportatore);
         this.dataRegistrazione = dataRegistrazione;
+        if (dataRilascio != null && dataAnnullamento != null) {
+            throw new IllegalArgumentException(
+                    "Un ordine di vendita non può essere rilasciato e annullato");
+        }
         this.dataRilascio = dataRilascio;
+        this.dataAnnullamento = dataAnnullamento;
     }
 
     public Long getId() { return id; }
@@ -41,6 +59,7 @@ public class OrdineVendita {
     public Agente getTrasportatore() { return trasportatore; }
     public LocalDateTime getDataRegistrazione() { return dataRegistrazione; }
     public LocalDate getDataRilascio() { return dataRilascio; }
+    public LocalDate getDataAnnullamento() { return dataAnnullamento; }
 
     public void setCliente(Agente cliente) {
         validaTipo(cliente, TipoAgente.CLIENTE, "cliente");
@@ -57,8 +76,31 @@ public class OrdineVendita {
         this.trasportatore = trasportatore;
     }
 
-    public void setDataRilascio(LocalDate dataRilascio) {
-        this.dataRilascio = dataRilascio;
+    public void verificaModificabile() {
+        if (dataRilascio != null) {
+            throw new OrdineVenditaNonModificabileException(
+                    numeroOrdine, "è già stato rilasciato");
+        }
+        if (dataAnnullamento != null) {
+            throw new OrdineVenditaNonModificabileException(
+                    numeroOrdine, "è già stato annullato");
+        }
+    }
+
+    public void rilascia(LocalDate data) {
+        verificaModificabile();
+        if (data == null) {
+            throw new IllegalArgumentException("La data di rilascio è obbligatoria");
+        }
+        dataRilascio = data;
+    }
+
+    public void annulla(LocalDate data) {
+        verificaModificabile();
+        if (data == null) {
+            throw new IllegalArgumentException("La data di annullamento è obbligatoria");
+        }
+        dataAnnullamento = data;
     }
 
     private static void validaTipo(Agente agente, TipoAgente atteso, String campo) {

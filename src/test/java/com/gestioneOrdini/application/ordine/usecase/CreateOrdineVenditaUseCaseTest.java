@@ -41,12 +41,14 @@ class CreateOrdineVenditaUseCaseTest {
         when(ordineRepository.save(any())).thenAnswer(invocation -> {
             OrdineVendita o = invocation.getArgument(0);
             return new OrdineVendita(1L, "OV-2026-000001", o.getCliente(), o.getVenditore(),
-                    o.getTrasportatore(), LocalDateTime.now(), o.getDataRilascio());
+                    o.getTrasportatore(), LocalDateTime.now(), o.getDataRilascio(),
+                    o.getDataAnnullamento());
         });
 
-        var salvato = useCase.eseguire(new OrdineVenditaRequest(1L, 2L, 3L, null));
+        var salvato = useCase.eseguire(new OrdineVenditaRequest(1L, 2L, 3L));
 
         assertThat(salvato.getNumeroOrdine()).isEqualTo("OV-2026-000001");
+        assertThat(salvato.getDataAnnullamento()).isNull();
         verify(ordineRepository).save(any(OrdineVendita.class));
     }
 
@@ -56,7 +58,7 @@ class CreateOrdineVenditaUseCaseTest {
         when(agenteRepository.findById(2L)).thenReturn(Optional.of(agente(2L, TipoAgente.VENDITORE)));
         when(agenteRepository.findById(3L)).thenReturn(Optional.of(agente(3L, TipoAgente.TRASPORTATORE)));
 
-        assertThatThrownBy(() -> useCase.eseguire(new OrdineVenditaRequest(1L, 2L, 3L, null)))
+        assertThatThrownBy(() -> useCase.eseguire(new OrdineVenditaRequest(1L, 2L, 3L)))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("CLIENTE");
         verifyNoInteractions(ordineRepository);
     }
@@ -64,7 +66,7 @@ class CreateOrdineVenditaUseCaseTest {
     @Test
     void dovrebbeRitornareNotFoundQuandoAgenteNonEsiste() {
         when(agenteRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> useCase.eseguire(new OrdineVenditaRequest(99L, 2L, 3L, null)))
+        assertThatThrownBy(() -> useCase.eseguire(new OrdineVenditaRequest(99L, 2L, 3L)))
                 .isInstanceOf(EntityNotFoundException.class);
     }
 

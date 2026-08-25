@@ -2,6 +2,13 @@ package com.gestioneOrdini.infrastructure.persistence.repository;
 
 import com.gestioneOrdini.infrastructure.persistence.entity.ProdottoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
+
+import java.util.Optional;
 
 /**
  * Repository JPA responsabile della gestione della persistenza per {@link ProdottoEntity}.
@@ -26,5 +33,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 
 public interface ProdottoJpaRepository extends JpaRepository<ProdottoEntity, Long> {
-}
+    Optional<ProdottoEntity> findByCodice(String codice);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from ProdottoEntity p where p.id = :id")
+    Optional<ProdottoEntity> findByIdForUpdate(@Param("id") Long id);
+}

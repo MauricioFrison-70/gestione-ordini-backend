@@ -12,5 +12,25 @@ spring:
     hibernate:
       ddl-auto: update
 
+  jackson:
+    deserialization:
+      accept-float-as-int: false
+
+notifiche:
+  scorta:
+    destinatario: ${EMAIL_RESPONSABILE_SCORTA:}
+    mittente: ${GMAIL_SENDER_EMAIL:}
+
+gmail:
+  oauth:
+    client-id: ${GMAIL_OAUTH_CLIENT_ID:}
+    client-secret: ${GMAIL_OAUTH_CLIENT_SECRET:}
+    refresh-token: ${GMAIL_OAUTH_REFRESH_TOKEN:}
+    redirect-uri: ${GMAIL_OAUTH_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}
+    authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+    token-uri: https://oauth2.googleapis.com/token
+    api-base-uri: https://gmail.googleapis.com/gmail/v1/
+    setup-enabled: ${GMAIL_OAUTH_SETUP_ENABLED:false}
+
 server:
   port: 8081

@@ -25,8 +25,7 @@ public class CreateOrdineVenditaUseCase {
         Agente cliente = cercaAgente(request.clienteId());
         Agente venditore = cercaAgente(request.venditoreId());
         Agente trasportatore = cercaAgente(request.trasportatoreId());
-        return ordineRepository.save(new OrdineVendita(
-                cliente, venditore, trasportatore, request.dataRilascio()));
+        return ordineRepository.save(new OrdineVendita(cliente, venditore, trasportatore));
     }
 
     private Agente cercaAgente(Long id) {

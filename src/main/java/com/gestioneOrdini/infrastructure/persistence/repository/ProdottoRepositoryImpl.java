@@ -36,6 +36,17 @@ public class ProdottoRepositoryImpl implements ProdottoRepository {
     }
 
     @Override
+    public Optional<Prodotto> findByIdForUpdate(Long id) {
+        return jpa.findByIdForUpdate(id)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Prodotto> findByCodice(String codice) {
+        return jpa.findByCodice(codice).map(mapper::toDomain);
+    }
+
+    @Override
     public Prodotto save(Prodotto prodotto) {
         try {
             ProdottoEntity entity = mapper.toEntity(prodotto);

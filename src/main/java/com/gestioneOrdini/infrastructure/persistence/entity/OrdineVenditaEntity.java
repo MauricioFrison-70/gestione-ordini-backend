@@ -5,6 +5,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ordini_vendita", uniqueConstraints =
@@ -41,11 +43,18 @@ public class OrdineVenditaEntity {
     @Column(name = "release_date")
     private LocalDate dataRilascio;
 
+    @Column(name = "cancellation_date")
+    private LocalDate dataAnnullamento;
+
+    @OneToMany(mappedBy = "ordineVendita", cascade = CascadeType.REMOVE)
+    private List<RigaOrdineVenditaEntity> righe = new ArrayList<>();
+
     public OrdineVenditaEntity() {}
 
     public OrdineVenditaEntity(Long id, String numeroOrdine, AgenteEntity cliente,
                                AgenteEntity venditore, AgenteEntity trasportatore,
-                               LocalDateTime dataRegistrazione, LocalDate dataRilascio) {
+                               LocalDateTime dataRegistrazione, LocalDate dataRilascio,
+                               LocalDate dataAnnullamento) {
         this.id = id;
         this.numeroOrdine = numeroOrdine;
         this.cliente = cliente;
@@ -53,6 +62,7 @@ public class OrdineVenditaEntity {
         this.trasportatore = trasportatore;
         this.dataRegistrazione = dataRegistrazione;
         this.dataRilascio = dataRilascio;
+        this.dataAnnullamento = dataAnnullamento;
     }
 
     public Long getId() { return id; }
@@ -63,4 +73,5 @@ public class OrdineVenditaEntity {
     public AgenteEntity getTrasportatore() { return trasportatore; }
     public LocalDateTime getDataRegistrazione() { return dataRegistrazione; }
     public LocalDate getDataRilascio() { return dataRilascio; }
+    public LocalDate getDataAnnullamento() { return dataAnnullamento; }
 }

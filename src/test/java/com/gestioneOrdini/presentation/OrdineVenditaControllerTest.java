@@ -5,8 +5,10 @@ import com.gestioneOrdini.application.ordine.dto.*;
 import com.gestioneOrdini.application.ordine.usecase.*;
 import com.gestioneOrdini.domain.agente.model.Agente;
 import com.gestioneOrdini.domain.agente.model.TipoAgente;
+import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaAnnullatoException;
 import com.gestioneOrdini.domain.ordine.model.OrdineVendita;
 import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaRilasciatoException;
+import com.gestioneOrdini.domain.ordine.exception.ScortaInsufficienteException;
 import com.gestioneOrdini.infrastructure.persistence.mapper.ordine.OrdineVenditaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,8 @@ class OrdineVenditaControllerTest {
     @MockBean private ListOrdiniVenditaUseCase listUseCase;
     @MockBean private UpdateOrdineVenditaUseCase updateUseCase;
     @MockBean private DeleteOrdineVenditaUseCase deleteUseCase;
+    @MockBean private RilasciaOrdineVenditaUseCase rilasciaUseCase;
+    @MockBean private AnnullaOrdineVenditaUseCase annullaUseCase;
     @MockBean private OrdineVenditaMapper mapper;
 
     private OrdineVendita ordine;
@@ -47,12 +51,12 @@ class OrdineVenditaControllerTest {
         Agente trasportatore = agente(3L, TipoAgente.TRASPORTATORE);
         ordine = new OrdineVendita(10L, "OV-2026-000010", cliente, venditore,
                 trasportatore, LocalDateTime.of(2026, 8, 21, 10, 0), null);
-        request = new OrdineVenditaRequest(1L, 2L, 3L, null);
+        request = new OrdineVenditaRequest(1L, 2L, 3L);
         response = new OrdineVenditaResponse(10L, "OV-2026-000010",
                 new AgenteRiferimentoResponse(1L, "CLIENTE"),
                 new AgenteRiferimentoResponse(2L, "VENDITORE"),
                 new AgenteRiferimentoResponse(3L, "TRASPORTATORE"),
-                ordine.getDataRegistrazione(), null);
+                ordine.getDataRegistrazione(), null, null);
     }
 
     @Test
@@ -83,18 +87,48 @@ class OrdineVenditaControllerTest {
     }
 
     @Test
-    void dovrebbeAggiornareDataRilascio() throws Exception {
-        var aggiornata = new OrdineVenditaRequest(1L, 2L, 3L, LocalDate.of(2026, 8, 22));
-        var risposta = new OrdineVenditaResponse(response.id(), response.numeroOrdine(),
-                response.cliente(), response.venditore(), response.trasportatore(),
-                response.dataRegistrazione(), aggiornata.dataRilascio());
+    void dovrebbeAggiornareOrdinePendente() throws Exception {
         Mockito.when(updateUseCase.eseguire(eq(10L), any())).thenReturn(ordine);
-        Mockito.when(mapper.toResponse(ordine)).thenReturn(risposta);
+        Mockito.when(mapper.toResponse(ordine)).thenReturn(response);
 
         mockMvc.perform(put("/api/ordini-vendita/10").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(aggiornata)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dataRilascio").value("2026-08-22"));
+                .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void dovrebbeRilasciareOrdineViaApi() throws Exception {
+        Mockito.when(rilasciaUseCase.eseguire(10L)).thenReturn(ordine);
+        Mockito.when(mapper.toResponse(ordine)).thenReturn(response);
+
+        mockMvc.perform(post("/api/ordini-vendita/10/rilasciare"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10));
+    }
+
+    @Test
+    void dovrebbeRifiutareRilascioQuandoLaScortaNonESufficiente() throws Exception {
+        Mockito.when(rilasciaUseCase.eseguire(10L))
+                .thenThrow(new ScortaInsufficienteException(
+                        "Prodotti: P001 (disponibile: 1, richiesta: 3)."));
+
+        mockMvc.perform(post("/api/ordini-vendita/10/rilasciare"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codice").value("SCORTA_INSUFFICIENTE"))
+                .andExpect(jsonPath("$.errore").value(
+                        "Scorta insufficiente. L'operazione è stata annullata. "
+                                + "Prodotti: P001 (disponibile: 1, richiesta: 3)."));
+    }
+
+    @Test
+    void dovrebbeAnnullareOrdineViaApi() throws Exception {
+        Mockito.when(annullaUseCase.eseguire(10L)).thenReturn(ordine);
+        Mockito.when(mapper.toResponse(ordine)).thenReturn(response);
+
+        mockMvc.perform(post("/api/ordini-vendita/10/annullare"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10));
     }
 
     @Test
@@ -135,6 +169,19 @@ class OrdineVenditaControllerTest {
                 .andExpect(jsonPath("$.errore").value(
                         "L'ordine di vendita OV-2026-000010 non può essere eliminato "
                                 + "perché ha già una data di rilascio."));
+    }
+
+    @Test
+    void dovrebbeRifiutareEliminazioneOrdineAnnullato() throws Exception {
+        Mockito.doThrow(new OrdineVenditaAnnullatoException("OV-2026-000010"))
+                .when(deleteUseCase).eseguire(10L);
+
+        mockMvc.perform(delete("/api/ordini-vendita/10"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codice").value("ORDINE_VENDITA_ANNULLATO"))
+                .andExpect(jsonPath("$.errore").value(
+                        "L'ordine di vendita OV-2026-000010 non può essere eliminato "
+                                + "perché ha già una data di annullamento."));
     }
 
     private Agente agente(Long id, TipoAgente tipo) {

@@ -1,0 +1,27 @@
+package com.gestioneOrdini.application.acquisto.usecase;
+
+import com.gestioneOrdini.domain.acquisto.model.OrdineAcquisto;
+import com.gestioneOrdini.domain.acquisto.repository.OrdineAcquistoRepository;
+import com.gestioneOrdini.domain.shared.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+
+@Service
+public class AnnullaOrdineAcquistoUseCase {
+    private final OrdineAcquistoRepository repository;
+
+    public AnnullaOrdineAcquistoUseCase(OrdineAcquistoRepository repository) {
+        this.repository = repository;
+    }
+
+    @Transactional
+    public OrdineAcquisto eseguire(Long id) {
+        OrdineAcquisto ordine = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Ordine di acquisto", id));
+        ordine.annulla(LocalDate.now());
+        return repository.save(ordine);
+    }
+}

@@ -23,10 +23,10 @@ public class UpdateOrdineVenditaUseCase {
     public OrdineVendita eseguire(Long id, OrdineVenditaRequest request) {
         OrdineVendita ordine = ordineRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ordine di vendita", id));
+        ordine.verificaModificabile();
         ordine.setCliente(cercaAgente(request.clienteId()));
         ordine.setVenditore(cercaAgente(request.venditoreId()));
         ordine.setTrasportatore(cercaAgente(request.trasportatoreId()));
-        ordine.setDataRilascio(request.dataRilascio());
         return ordineRepository.save(ordine);
     }
 

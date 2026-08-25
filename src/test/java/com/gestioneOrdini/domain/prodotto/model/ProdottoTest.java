@@ -10,6 +10,34 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 class ProdottoTest {
 
     @Test
+    void dovrebbeIncrementareLaGiacenzaRicevuta() {
+        Prodotto prodotto = nuovoProdotto();
+
+        prodotto.incrementaQuantita(5);
+
+        assertThat(prodotto.getQuantita()).isEqualTo(15);
+    }
+
+    @Test
+    void dovrebbeDecrementareLaGiacenzaVenduta() {
+        Prodotto prodotto = nuovoProdotto();
+
+        prodotto.decrementaQuantita(4);
+
+        assertThat(prodotto.getQuantita()).isEqualTo(6);
+    }
+
+    @Test
+    void dovrebbeRifiutareVenditaConQuantitaSuperioreAllaGiacenza() {
+        Prodotto prodotto = nuovoProdotto();
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> prodotto.decrementaQuantita(11))
+                .withMessageContaining("non è sufficiente");
+        assertThat(prodotto.getQuantita()).isEqualTo(10);
+    }
+
+    @Test
     void dovrebbeCreareProdottoConDatiValidi() {
         Prodotto prodotto = nuovoProdotto();
 

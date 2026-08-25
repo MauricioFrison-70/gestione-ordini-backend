@@ -33,7 +33,7 @@ class UpdateProdottoUseCaseTest {
     }
 
     @Test
-    void deveAggiornareProdottoQuandoEsiste() {
+    void deveAggiornareProdottoSenzaAlterareLaGiacenza() {
 
         Long id = 1L;
 
@@ -73,7 +73,7 @@ class UpdateProdottoUseCaseTest {
         assertEquals("Prodotto aggiornato", risultato.getDescrizione());
         assertEquals(new BigDecimal("12.50"), risultato.getValoreAcquisto());
         assertEquals(new BigDecimal("18.90"), risultato.getValoreVendita());
-        assertEquals(150, risultato.getQuantita());
+        assertEquals(100, risultato.getQuantita());
         assertEquals(20, risultato.getScortaMinima());
         assertTrue(risultato.getArchiviato());
 

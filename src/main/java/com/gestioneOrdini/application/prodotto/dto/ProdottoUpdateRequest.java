@@ -11,8 +11,9 @@ import java.math.BigDecimal;
 /**
  * DTO di input per l'aggiornamento di un prodotto.
  *
- * <p>Il codice non è presente perché, una volta creato il prodotto,
- * costituisce un identificatore di business immutabile.</p>
+ * <p>Il codice e la giacenza non sono presenti perché sono immutabili
+ * da questo flusso. La giacenza viene aggiornata esclusivamente dagli
+ * ordini di acquisto e di vendita.</p>
  */
 public record ProdottoUpdateRequest(
 
@@ -27,10 +28,6 @@ public record ProdottoUpdateRequest(
         @NotNull(message = "Il valore di vendita è obbligatorio")
         @DecimalMin(value = "0.00", message = "Il valore di vendita deve essere maggiore o uguale a zero")
         BigDecimal valoreVendita,
-
-        @NotNull(message = "La quantità è obbligatoria")
-        @Min(value = 0, message = "La quantità deve essere maggiore o uguale a zero")
-        Integer quantita,
 
         @NotNull(message = "La scorta minima è obbligatoria")
         @Min(value = 0, message = "La scorta minima deve essere maggiore o uguale a zero")

@@ -85,7 +85,6 @@ class ProdottoControllerTest {
                 "Notebook Dell",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -94,7 +93,6 @@ class ProdottoControllerTest {
                 "Notebook Dell aggiornato",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -165,7 +163,7 @@ class ProdottoControllerTest {
     void deveAggiornareProdotto() throws Exception {
 
         Mockito.when(getUseCase.eseguire(1L)).thenReturn(prodotto);
-        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq("P001"))).thenReturn(prodotto);
+        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq(prodotto))).thenReturn(prodotto);
         Mockito.when(updateUseCase.eseguire(eq(1L), any())).thenReturn(prodotto);
         Mockito.when(mapper.toResponse(any())).thenReturn(response);
 
@@ -202,7 +200,6 @@ class ProdottoControllerTest {
                 null,
                 null,
                 null,
-                null,
                 false
         );
 
@@ -232,7 +229,6 @@ class ProdottoControllerTest {
                 "Descrizione valida",
                 new BigDecimal("10.00"),
                 new BigDecimal("20.00"),
-                1,
                 0,
                 false
         );
@@ -241,7 +237,6 @@ class ProdottoControllerTest {
                 "D".repeat(31),
                 new BigDecimal("10.00"),
                 new BigDecimal("20.00"),
-                1,
                 0,
                 false
         );
@@ -264,7 +259,6 @@ class ProdottoControllerTest {
                 "",
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -281,7 +275,6 @@ class ProdottoControllerTest {
                 "D".repeat(31),
                 new BigDecimal("1500.00"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -299,7 +292,6 @@ class ProdottoControllerTest {
                 "Notebook Dell aggiornato",
                 new BigDecimal("-0.01"),
                 new BigDecimal("2200.00"),
-                10,
                 2,
                 false
         );
@@ -317,7 +309,6 @@ class ProdottoControllerTest {
                 {
                   "valoreAcquisto": 1500.00,
                   "valoreVendita": 2200.00,
-                  "quantita": 10,
                   "scortaMinima": 2,
                   "archiviato": false
                 }
@@ -330,7 +321,7 @@ class ProdottoControllerTest {
     }
 
     @Test
-    void deveIgnorareCodiceInviatoNellAggiornamento() throws Exception {
+    void deveIgnorareCodiceEQuantitaInviatiNellAggiornamento() throws Exception {
 
         String richiestaConCodice = """
                 {
@@ -338,14 +329,14 @@ class ProdottoControllerTest {
                   "descrizione": "Notebook Dell aggiornato",
                   "valoreAcquisto": 1500.00,
                   "valoreVendita": 2200.00,
-                  "quantita": 10,
+                  "quantita": 999,
                   "scortaMinima": 2,
                   "archiviato": false
                 }
                 """;
 
         Mockito.when(getUseCase.eseguire(1L)).thenReturn(prodotto);
-        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq("P001"))).thenReturn(prodotto);
+        Mockito.when(mapper.toDomain(any(ProdottoUpdateRequest.class), eq(prodotto))).thenReturn(prodotto);
         Mockito.when(updateUseCase.eseguire(1L, prodotto)).thenReturn(prodotto);
         Mockito.when(mapper.toResponse(prodotto)).thenReturn(response);
 
@@ -353,9 +344,10 @@ class ProdottoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(richiestaConCodice))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.codice").value("P001"));
+                .andExpect(jsonPath("$.codice").value("P001"))
+                .andExpect(jsonPath("$.quantita").value(10));
 
-        Mockito.verify(mapper).toDomain(any(ProdottoUpdateRequest.class), eq("P001"));
+        Mockito.verify(mapper).toDomain(any(ProdottoUpdateRequest.class), eq(prodotto));
     }
 
     @Test

@@ -39,9 +39,26 @@ class OrdineVenditaRepositoryIntegrationTest extends AbstractSqlServerIntegratio
         assertThat(trovato.getTrasportatore().getId()).isEqualTo(trasportatore.getId());
         assertThat(trovato.getDataRegistrazione()).isNotNull();
         assertThat(trovato.getDataRilascio()).isEqualTo(rilascio);
+        assertThat(trovato.getDataAnnullamento()).isNull();
         assertThat(ordineRepository.existsByAgenteId(cliente.getId())).isTrue();
         assertThat(ordineRepository.existsByAgenteId(venditore.getId())).isTrue();
         assertThat(ordineRepository.existsByAgenteId(trasportatore.getId())).isTrue();
+    }
+
+    @Test
+    void dovrebbeSalvareDataAnnullamentoSenzaDataRilascio() {
+        Agente cliente = salva("Cliente Annullato", TipoAgente.CLIENTE);
+        Agente venditore = salva("Venditore Annullato", TipoAgente.VENDITORE);
+        Agente trasportatore = salva("Trasportatore Annullato", TipoAgente.TRASPORTATORE);
+        LocalDate annullamento = LocalDate.of(2026, 8, 23);
+        OrdineVendita ordine = new OrdineVendita(cliente, venditore, trasportatore, null);
+        ordine.annulla(annullamento);
+
+        OrdineVendita salvato = ordineRepository.save(ordine);
+        OrdineVendita trovato = ordineRepository.findById(salvato.getId()).orElseThrow();
+
+        assertThat(trovato.getDataRilascio()).isNull();
+        assertThat(trovato.getDataAnnullamento()).isEqualTo(annullamento);
     }
 
     @Test

@@ -123,6 +123,31 @@ public class Prodotto {
         this.quantita = quantita;
     }
 
+    public void incrementaQuantita(Integer quantitaRicevuta) {
+        if (quantitaRicevuta == null || quantitaRicevuta <= 0) {
+            throw new IllegalArgumentException(
+                    "La quantità ricevuta deve essere maggiore di zero");
+        }
+        try {
+            setQuantita(Math.addExact(this.quantita, quantitaRicevuta));
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException(
+                    "La quantità in magazzino supera il limite consentito", ex);
+        }
+    }
+
+    public void decrementaQuantita(Integer quantitaVenduta) {
+        if (quantitaVenduta == null || quantitaVenduta <= 0) {
+            throw new IllegalArgumentException(
+                    "La quantità venduta deve essere maggiore di zero");
+        }
+        if (this.quantita < quantitaVenduta) {
+            throw new IllegalArgumentException(
+                    "La quantità disponibile non è sufficiente");
+        }
+        setQuantita(this.quantita - quantitaVenduta);
+    }
+
     public Integer getScortaMinima() {
         return scortaMinima;
     }

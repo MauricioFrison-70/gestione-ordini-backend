@@ -27,10 +27,28 @@ com.projectJava
 - Spring Actuator
 - SQL Server (mssql-jdbc)
 - HikariCP
+- Gmail API con OAuth 2.0 per le notifiche e-mail
 
 ## 📚 Documentazione API
 Swagger UI disponibile su:
-http://localhost:8080/swagger-ui.html
+http://localhost:8081/swagger-ui.html
+
+## ✉️ Notifiche e-mail con Gmail API
+Il backend usa OAuth 2.0 e lo scope minimo `gmail.send`; non utilizza password
+SMTP. Configurare le seguenti variabili di ambiente:
+
+- `GMAIL_OAUTH_CLIENT_ID`
+- `GMAIL_OAUTH_CLIENT_SECRET`
+- `GMAIL_OAUTH_REFRESH_TOKEN`
+- `GMAIL_SENDER_EMAIL`
+- `EMAIL_RESPONSABILE_SCORTA`
+
+Per ottenere il refresh token una sola volta, configurare temporaneamente
+`GMAIL_OAUTH_SETUP_ENABLED=true`, avviare il backend e aprire:
+`http://localhost:8081/api/setup/gmail/oauth/authorize`.
+
+Al termine, salvare il refresh token come variabile di ambiente, impostare
+`GMAIL_OAUTH_SETUP_ENABLED=false` e riavviare il backend.
 
 ## 🗄️ Configurazione del Database
 spring.datasource.url=jdbc:sqlserver://<host>:<port>;databaseName=<db>

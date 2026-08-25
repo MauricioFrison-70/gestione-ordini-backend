@@ -21,7 +21,8 @@ public class OrdineVenditaMapper {
                 agenteMapper.toEntity(ordine.getCliente()),
                 agenteMapper.toEntity(ordine.getVenditore()),
                 agenteMapper.toEntity(ordine.getTrasportatore()),
-                ordine.getDataRegistrazione(), ordine.getDataRilascio());
+                ordine.getDataRegistrazione(), ordine.getDataRilascio(),
+                ordine.getDataAnnullamento());
     }
 
     public OrdineVendita toDomain(OrdineVenditaEntity entity) {
@@ -30,7 +31,8 @@ public class OrdineVenditaMapper {
                 agenteMapper.toDomain(entity.getCliente()),
                 agenteMapper.toDomain(entity.getVenditore()),
                 agenteMapper.toDomain(entity.getTrasportatore()),
-                entity.getDataRegistrazione(), entity.getDataRilascio());
+                entity.getDataRegistrazione(), entity.getDataRilascio(),
+                entity.getDataAnnullamento());
     }
 
     public OrdineVenditaResponse toResponse(OrdineVendita ordine) {
@@ -38,7 +40,8 @@ public class OrdineVenditaMapper {
                 ordine.getId(), ordine.getNumeroOrdine(),
                 riferimento(ordine.getCliente()), riferimento(ordine.getVenditore()),
                 riferimento(ordine.getTrasportatore()),
-                ordine.getDataRegistrazione(), ordine.getDataRilascio());
+                ordine.getDataRegistrazione(), ordine.getDataRilascio(),
+                ordine.getDataAnnullamento());
     }
 
     private AgenteRiferimentoResponse riferimento(com.gestioneOrdini.domain.agente.model.Agente agente) {

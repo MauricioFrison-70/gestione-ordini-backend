@@ -4,7 +4,7 @@ public class AgenteUtilizzatoException extends RuntimeException {
     public static final String CODICE = "AGENTE_UTILIZZATO";
 
     public AgenteUtilizzatoException() {
-        super("L'agente è utilizzato in uno o più ordini di vendita. "
+        super("L'agente è utilizzato in uno o più ordini. "
                 + "Vuoi archiviarlo o annullare l'eliminazione?");
     }
 }

@@ -19,6 +19,8 @@ public class OrdineVenditaController {
     private final ListOrdiniVenditaUseCase listUseCase;
     private final UpdateOrdineVenditaUseCase updateUseCase;
     private final DeleteOrdineVenditaUseCase deleteUseCase;
+    private final RilasciaOrdineVenditaUseCase rilasciaUseCase;
+    private final AnnullaOrdineVenditaUseCase annullaUseCase;
     private final OrdineVenditaMapper mapper;
 
     public OrdineVenditaController(CreateOrdineVenditaUseCase createUseCase,
@@ -26,12 +28,16 @@ public class OrdineVenditaController {
                                     ListOrdiniVenditaUseCase listUseCase,
                                     UpdateOrdineVenditaUseCase updateUseCase,
                                     DeleteOrdineVenditaUseCase deleteUseCase,
+                                    RilasciaOrdineVenditaUseCase rilasciaUseCase,
+                                    AnnullaOrdineVenditaUseCase annullaUseCase,
                                     OrdineVenditaMapper mapper) {
         this.createUseCase = createUseCase;
         this.getUseCase = getUseCase;
         this.listUseCase = listUseCase;
         this.updateUseCase = updateUseCase;
         this.deleteUseCase = deleteUseCase;
+        this.rilasciaUseCase = rilasciaUseCase;
+        this.annullaUseCase = annullaUseCase;
         this.mapper = mapper;
     }
 
@@ -62,5 +68,15 @@ public class OrdineVenditaController {
     public ResponseEntity<Void> eliminare(@PathVariable Long id) {
         deleteUseCase.eseguire(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/rilasciare")
+    public ResponseEntity<OrdineVenditaResponse> rilasciare(@PathVariable Long id) {
+        return ResponseEntity.ok(mapper.toResponse(rilasciaUseCase.eseguire(id)));
+    }
+
+    @PostMapping("/{id}/annullare")
+    public ResponseEntity<OrdineVenditaResponse> annullare(@PathVariable Long id) {
+        return ResponseEntity.ok(mapper.toResponse(annullaUseCase.eseguire(id)));
     }
 }

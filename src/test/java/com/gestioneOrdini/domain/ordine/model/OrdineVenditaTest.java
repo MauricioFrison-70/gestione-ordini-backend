@@ -19,13 +19,31 @@ class OrdineVenditaTest {
         assertThat(ordine.getVenditore().getTipoAgente()).isEqualTo(TipoAgente.VENDITORE);
         assertThat(ordine.getTrasportatore().getTipoAgente()).isEqualTo(TipoAgente.TRASPORTATORE);
         assertThat(ordine.getDataRilascio()).isNull();
+        assertThat(ordine.getDataAnnullamento()).isNull();
     }
 
     @Test
-    void dovrebbeAccettareDataRilascioOpzionale() {
+    void dovrebbeRilasciareOrdinePendente() {
         OrdineVendita ordine = nuovoOrdine();
-        ordine.setDataRilascio(LocalDate.of(2026, 8, 21));
+        ordine.rilascia(LocalDate.of(2026, 8, 21));
         assertThat(ordine.getDataRilascio()).isEqualTo(LocalDate.of(2026, 8, 21));
+    }
+
+    @Test
+    void dovrebbeAnnullareOrdinePendente() {
+        OrdineVendita ordine = nuovoOrdine();
+        ordine.annulla(LocalDate.of(2026, 8, 22));
+        assertThat(ordine.getDataAnnullamento()).isEqualTo(LocalDate.of(2026, 8, 22));
+    }
+
+    @Test
+    void dovrebbeRifiutareAnnullamentoSeOrdineGiaRilasciato() {
+        OrdineVendita ordine = nuovoOrdine();
+        ordine.rilascia(LocalDate.of(2026, 8, 21));
+
+        assertThatThrownBy(() -> ordine.annulla(LocalDate.of(2026, 8, 22)))
+                .isInstanceOf(com.gestioneOrdini.domain.ordine.exception.OrdineVenditaNonModificabileException.class)
+                .hasMessageContaining("già stato rilasciato");
     }
 
     @Test
@@ -33,7 +51,7 @@ class OrdineVenditaTest {
         assertThatThrownBy(() -> new OrdineVendita(
                 agente(1L, TipoAgente.FORNITORE),
                 agente(2L, TipoAgente.VENDITORE),
-                agente(3L, TipoAgente.TRASPORTATORE), null))
+                agente(3L, TipoAgente.TRASPORTATORE)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("CLIENTE");
     }
@@ -41,7 +59,7 @@ class OrdineVenditaTest {
     private OrdineVendita nuovoOrdine() {
         return new OrdineVendita(agente(1L, TipoAgente.CLIENTE),
                 agente(2L, TipoAgente.VENDITORE),
-                agente(3L, TipoAgente.TRASPORTATORE), null);
+                agente(3L, TipoAgente.TRASPORTATORE));
     }
 
     private Agente agente(Long id, TipoAgente tipo) {

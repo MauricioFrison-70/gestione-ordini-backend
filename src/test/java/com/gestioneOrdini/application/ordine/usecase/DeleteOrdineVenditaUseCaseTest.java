@@ -2,6 +2,7 @@ package com.gestioneOrdini.application.ordine.usecase;
 
 import com.gestioneOrdini.domain.agente.model.Agente;
 import com.gestioneOrdini.domain.agente.model.TipoAgente;
+import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaAnnullatoException;
 import com.gestioneOrdini.domain.ordine.exception.OrdineVenditaRilasciatoException;
 import com.gestioneOrdini.domain.ordine.model.OrdineVendita;
 import com.gestioneOrdini.domain.ordine.repository.OrdineVenditaRepository;
@@ -20,8 +21,8 @@ class DeleteOrdineVenditaUseCaseTest {
     private final DeleteOrdineVenditaUseCase useCase = new DeleteOrdineVenditaUseCase(repository);
 
     @Test
-    void deveEliminareOrdineSenzaDataRilascio() {
-        when(repository.findById(1L)).thenReturn(Optional.of(ordine(null)));
+    void deveEliminareOrdineSenzaDataRilascioOAnnullamento() {
+        when(repository.findById(1L)).thenReturn(Optional.of(ordine(null, null)));
 
         useCase.eseguire(1L);
 
@@ -30,9 +31,20 @@ class DeleteOrdineVenditaUseCaseTest {
 
     @Test
     void nonDeveEliminareOrdineConDataRilascio() {
-        when(repository.findById(1L)).thenReturn(Optional.of(ordine(LocalDate.of(2026, 8, 25))));
+        when(repository.findById(1L)).thenReturn(Optional.of(
+                ordine(LocalDate.of(2026, 8, 25), null)));
 
         assertThrows(OrdineVenditaRilasciatoException.class, () -> useCase.eseguire(1L));
+
+        verify(repository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void nonDeveEliminareOrdineConDataAnnullamento() {
+        when(repository.findById(1L)).thenReturn(Optional.of(
+                ordine(null, LocalDate.of(2026, 8, 26))));
+
+        assertThrows(OrdineVenditaAnnullatoException.class, () -> useCase.eseguire(1L));
 
         verify(repository, never()).deleteById(anyLong());
     }
@@ -43,10 +55,11 @@ class DeleteOrdineVenditaUseCaseTest {
         assertThrows(EntityNotFoundException.class, () -> useCase.eseguire(99L));
     }
 
-    private OrdineVendita ordine(LocalDate dataRilascio) {
+    private OrdineVendita ordine(LocalDate dataRilascio, LocalDate dataAnnullamento) {
         return new OrdineVendita(1L, "OV-2026-000001",
                 agente(1L, TipoAgente.CLIENTE), agente(2L, TipoAgente.VENDITORE),
-                agente(3L, TipoAgente.TRASPORTATORE), LocalDateTime.now(), dataRilascio);
+                agente(3L, TipoAgente.TRASPORTATORE), LocalDateTime.now(),
+                dataRilascio, dataAnnullamento);
     }
 
     private Agente agente(Long id, TipoAgente tipo) {

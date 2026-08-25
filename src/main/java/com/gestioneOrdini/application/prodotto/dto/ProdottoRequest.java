@@ -15,6 +15,9 @@ import java.math.BigDecimal;
  * nell'ambito di una richiesta REST. I campi generati dal sistema
  * (come l'identificativo o la data di registrazione) non sono inclusi.</p>
  *
+ * <p>La giacenza non è accettata in input: alla creazione parte da zero
+ * e viene aggiornata esclusivamente dagli ordini di acquisto e di vendita.</p>
+ *
  * <p>Il campo {@code archiviato} è opzionale: se non specificato,
  * viene impostato automaticamente a {@code false}.</p>
  */
@@ -35,10 +38,6 @@ public record ProdottoRequest(
         @NotNull(message = "Il valore di vendita è obbligatorio")
         @DecimalMin(value = "0.00", message = "Il valore di vendita deve essere positivo")
         BigDecimal valoreVendita,
-
-        @NotNull(message = "La quantità è obbligatoria")
-        @Min(value = 0, message = "La quantità deve essere maggiore o uguale a zero")
-        Integer quantita,
 
         @NotNull(message = "La scorta minima è obbligatoria")
         @Min(value = 0, message = "La scorta minima deve essere maggiore o uguale a zero")
