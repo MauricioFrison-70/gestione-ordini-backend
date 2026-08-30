@@ -51,7 +51,7 @@ BEGIN
     LEFT JOIN reporting.vw_ordini_vendita vendita
         ON vendita.dataRegistrazione >= CAST(mesi.periodo AS DATETIME2)
        AND vendita.dataRegistrazione < DATEADD(MONTH, 1, CAST(mesi.periodo AS DATETIME2))
-       AND vendita.stato <> N'ANNULLATO'
+       AND vendita.stato = N'RILASCIATO'
     GROUP BY mesi.periodo
     ORDER BY mesi.periodo;
 END;
