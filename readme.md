@@ -1,81 +1,214 @@
-# Gestione ordini Service – Backend Java (Spring Boot 3.3)
+# Gestione Ordini — Backend
 
-## 📌 Panoramica
-Il Gestione ordini Service è una piccola API backend sviluppata in Java 17 con Spring Boot 3.3, progettata per dimostrare competenze tecniche in architettura pulita, sviluppo di servizi REST e integrazione con database relazionali. Il progetto è pensato per essere semplice, chiaro e facilmente leggibile da recruiter e team tecnici.
+API REST per la gestione di agenti, prodotti, ordini di vendita, ordini di
+acquisto, giacenze e rapporti dinamici. Il progetto è sviluppato in Java e
+Spring Boot e dimostra l'applicazione di regole di dominio, transazioni,
+integrazione con SQL Server, notifiche tramite Gmail API e test automatizzati.
 
-## 🏛️ Architettura
-com.projectJava
-├── application          → Casi d’uso
-├── domain               → Modelli e logica di dominio
-├── infrastructure       → Configurazioni, JPA, handler
-├── presentation         → Controller REST
-├── repository           → Interfacce di accesso ai dati
-└── service              → Servizi applicativi
+L'interfaccia e i messaggi applicativi sono principalmente in italiano.
 
-## 📘 Documentazione
-- Architettura del progetto
-- Checklist per la creazione di nuovi moduli (DDD + Hexagonal):  
-  [docs/checklists/nuovo-modulo-ddd.md](docs/checklists/nuovo-modulo-ddd.md)
-- 
-## 🚀 Tecnologie Utilizzate
+## Funzionalità
+
+- gestione di clienti, venditori, trasportatori e fornitori come tipi di agente;
+- gestione dei prodotti con prezzi, scorta minima, stato di archiviazione e
+  giacenza controllata dal sistema;
+- ordini di vendita con righe, rilascio, annullamento e verifica preventiva
+  della disponibilità di tutti i prodotti;
+- ordini di acquisto con righe, ricevimento merce e aggiornamento della giacenza;
+- aggiornamento atomico della giacenza all'interno di transazioni di database;
+- notifiche e-mail asincrone quando la scorta scende sotto il minimo o viene
+  ripristinata;
+- rapporti configurabili tramite metadati e stored procedure SQL Server;
+- API generica utilizzata dalla pagina Rapporti e dalla dashboard del frontend;
+- documentazione OpenAPI e Swagger UI.
+
+I numeri degli ordini vengono generati dal sistema:
+
+- ordine di vendita: `OV-AAAA-000001`;
+- ordine di acquisto: `OA-AAAA-000001`.
+
+## Tecnologie
+
 - Java 17
 - Spring Boot 3.3.4
-- Spring Web
-- Spring Data JPA
-- Spring Validation
-- Springdoc OpenAPI (Swagger UI)
-- Spring Actuator
-- SQL Server (mssql-jdbc)
-- HikariCP
-- Gmail API con OAuth 2.0 per le notifiche e-mail
+- Spring Web, Validation e Actuator
+- Spring Data JPA e Hibernate
+- SQL Server e HikariCP
+- Springdoc OpenAPI
+- Gmail API con OAuth 2.0
+- JUnit 5, Mockito e Spring Boot Test
+- Testcontainers per i test di integrazione con SQL Server
 
-## 📚 Documentazione API
-Swagger UI disponibile su:
-http://localhost:8081/swagger-ui.html
+## Architettura
 
-## ✉️ Notifiche e-mail con Gmail API
-Il backend usa OAuth 2.0 e lo scope minimo `gmail.send`; non utilizza password
-SMTP. Configurare le seguenti variabili di ambiente:
+Il codice è organizzato per responsabilità e per contesto funzionale sotto il
+package `com.gestioneOrdini`:
 
-- `GMAIL_OAUTH_CLIENT_ID`
-- `GMAIL_OAUTH_CLIENT_SECRET`
-- `GMAIL_OAUTH_REFRESH_TOKEN`
-- `GMAIL_SENDER_EMAIL`
-- `EMAIL_RESPONSABILE_SCORTA`
+```text
+application/       DTO, porte e casi d'uso
+domain/            modelli, regole, eventi, eccezioni e repository di dominio
+infrastructure/    persistenza JPA/JDBC, configurazioni, e-mail ed eventi
+presentation/      controller REST
+exception/         gestione uniforme degli errori HTTP
+```
 
-Per ottenere il refresh token una sola volta, configurare temporaneamente
-`GMAIL_OAUTH_SETUP_ENABLED=true`, avviare il backend e aprire:
-`http://localhost:8081/api/setup/gmail/oauth/authorize`.
+La descrizione completa dei flussi, delle transazioni e delle dipendenze è in
+[docs/architettura.md](docs/architettura.md).
 
-Al termine, salvare il refresh token come variabile di ambiente, impostare
-`GMAIL_OAUTH_SETUP_ENABLED=false` e riavviare il backend.
+## Prerequisiti
 
-## 🗄️ Configurazione del Database
-spring.datasource.url=jdbc:sqlserver://<host>:<port>;databaseName=<db>
-spring.datasource.username=<user>
-spring.datasource.password=<password>
-spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
-spring.jpa.hibernate.ddl-auto=none
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
+- JDK 17 o versione successiva compatibile;
+- SQL Server raggiungibile dall'applicazione;
+- Docker in esecuzione soltanto per i test di integrazione con Testcontainers;
+- credenziali OAuth Google soltanto se si desidera inviare notifiche reali.
 
-## ▶️ Avvio del Progetto
-Prerequisiti:
-- Java 17+
-- Maven 3.8+
-- SQL Server attivo
+Il Maven Wrapper incluso nel repository consente di eseguire il progetto senza
+installare Maven separatamente.
 
-Comandi:
-mvn clean install
-mvn spring-boot:run
+## Configurazione
 
-## 🔧 Miglioramenti Futuri
-- Aggiunta di Flyway per migrazioni DB
-- Introduzione di MapStruct
-- Test di integrazione con Testcontainers
-- Pipeline CI/CD (GitHub Actions)
+### Database applicativo
 
-## 👤 Autore
-Mauricio  
-Backend Developer – Java & Spring Boot  
-Sirmione, Lombardia – Italia
+| Variabile | Obbligatoria | Descrizione |
+| --- | --- | --- |
+| `DB_USERNAME` | sì | Utente SQL Server dell'applicazione. |
+| `DB_PASSWORD` | sì | Password dell'utente applicativo. |
+
+Per lo sviluppo locale, URL e database sono definiti in
+`src/main/resources/application.yaml`. In un ambiente diverso, sovrascrivere
+le proprietà Spring tramite variabili di ambiente o un profilo dedicato.
+
+> Non salvare password, token OAuth o file di credenziali nel repository.
+
+### Connessione dedicata ai rapporti
+
+| Variabile | Valore predefinito |
+| --- | --- |
+| `REPORTING_DB_URL` | URL del database applicativo |
+| `REPORTING_DB_USERNAME` | `DB_USERNAME` |
+| `REPORTING_DB_PASSWORD` | `DB_PASSWORD` |
+| `REPORTING_DB_MAX_POOL_SIZE` | `3` |
+| `REPORTING_DB_CONNECTION_TIMEOUT_MS` | `10000` |
+| `REPORTING_MAX_ROWS` | `1000` |
+| `REPORTING_QUERY_TIMEOUT_SECONDS` | `30` |
+
+In un ambiente reale è raccomandato un utente dedicato con il solo ruolo
+`report_executor_role`. L'installazione e la pubblicazione dei rapporti sono
+descritte in [docs/reporting/README.md](docs/reporting/README.md).
+
+### Notifiche Gmail con OAuth 2.0
+
+| Variabile | Descrizione |
+| --- | --- |
+| `GMAIL_OAUTH_CLIENT_ID` | ID del client OAuth Google. |
+| `GMAIL_OAUTH_CLIENT_SECRET` | Segreto del client OAuth Google. |
+| `GMAIL_OAUTH_REFRESH_TOKEN` | Refresh token autorizzato con scope `gmail.send`. |
+| `GMAIL_SENDER_EMAIL` | Indirizzo Gmail mittente. |
+| `EMAIL_RESPONSABILE_SCORTA` | Destinatario degli avvisi di giacenza. |
+| `GMAIL_OAUTH_REDIRECT_URI` | Facoltativa; predefinita `http://localhost:8081/login/oauth2/code/google`. |
+| `GMAIL_OAUTH_SETUP_ENABLED` | Abilita temporaneamente il flusso iniziale; predefinita `false`. |
+
+Per ottenere il refresh token la prima volta:
+
+1. impostare temporaneamente `GMAIL_OAUTH_SETUP_ENABLED=true`;
+2. avviare il backend;
+3. aprire `http://localhost:8081/api/setup/gmail/oauth/authorize`;
+4. completare il consenso Google e salvare il refresh token come variabile;
+5. impostare `GMAIL_OAUTH_SETUP_ENABLED=false` e riavviare l'applicazione.
+
+L'endpoint di configurazione deve rimanere disabilitato durante il normale
+utilizzo dell'applicazione.
+
+## Database dei rapporti
+
+Eseguire una sola volta, nel database `ProjectJava`, gli script presenti in
+`src/main/resources/db/reporting` nell'ordine numerico:
+
+1. `001_ordini_vendita_per_periodo.sql`
+2. `002_motore_rapporti_dinamici.sql`
+3. `003_ranking_venditori_per_periodo.sql`
+4. `004_vendite_ultimi_dodici_mesi.sql`
+
+Gli script devono essere mantenuti insieme alle modifiche del catalogo dei
+rapporti.
+
+## Avvio locale
+
+Windows PowerShell:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Linux o macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Il backend viene esposto su `http://localhost:8081`.
+
+## API e documentazione interattiva
+
+- Swagger UI: `http://localhost:8081/swagger-ui.html`
+- specifica OpenAPI: `http://localhost:8081/v3/api-docs`
+- stato dell'applicazione: `http://localhost:8081/actuator/health`
+
+Risorse principali:
+
+| Risorsa | Percorso base |
+| --- | --- |
+| Agenti | `/api/agenti` |
+| Tipi di agente | `/api/tipo-agente` |
+| Prodotti | `/api/prodotti` |
+| Ordini di vendita | `/api/ordini-vendita` |
+| Righe degli ordini di vendita | `/api/ordini-vendita/{ordineId}/righe` |
+| Ordini di acquisto | `/api/ordini-acquisto` |
+| Righe degli ordini di acquisto | `/api/ordini-acquisto/{ordineId}/righe` |
+| Rapporti | `/api/rapporti` |
+
+## Test
+
+Test unitari e web, senza i test di integrazione:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Suite completa con Testcontainers e SQL Server:
+
+```powershell
+.\mvnw.cmd verify -Pintegration
+```
+
+Il test che invia un'e-mail reale è intenzionalmente disabilitato. Deve essere
+eseguito soltanto in modo esplicito, con le variabili Gmail configurate e con
+`RUN_REAL_EMAIL_TEST=true`.
+
+## Documentazione del progetto
+
+- [Architettura e flussi tecnici](docs/architettura.md)
+- [Motore dinamico dei rapporti](docs/reporting/README.md)
+- [Base di conoscenza funzionale per utenti e IA](docs/ai/base-conoscenza-sistema.md)
+- [Guida di integrazione del futuro assistente IA](docs/ai/README.md)
+- [Checklist per un nuovo modulo](docs/checklists/nuovo-modulo-ddd.md)
+- [Riferimenti tecnici](HELP.md)
+
+Quando una regola funzionale viene modificata, aggiornare nello stesso commit la
+base di conoscenza. In questo modo la documentazione e il futuro assistente del
+sistema rimangono coerenti con il comportamento applicativo.
+
+## Sicurezza
+
+- nessuna credenziale deve essere inserita nel frontend o versionata in Git;
+- il setup OAuth è disabilitato per impostazione predefinita;
+- il motore dei rapporti accetta soltanto procedure registrate nello schema
+  `reporting` e colonne esplicitamente autorizzate;
+- il frontend locale è autorizzato dal CORS su `localhost:5173` e
+  `127.0.0.1:5173`; gli ambienti distribuiti richiedono una configurazione
+  specifica;
+- l'autenticazione degli utenti applicativi non è ancora implementata.
+
+## Autore
+
+Mauricio Frison — Java Backend Developer, Sirmione (BS), Italia.

@@ -1,111 +1,69 @@
-📄 CHECKLIST — Questo documento definisce lo standard architetturale per la creazione di nuovi moduli nel progetto, seguendo DDD e Architettura Esagonale.
+# Checklist per un nuovo modulo
 
-🧱 1. DOMAIN — Nucleo del business
-1.1. Creare l’entità di dominio
-domain/<contexto>/model/NovaEntidade.java
+Questa checklist mantiene coerente l'organizzazione a livelli del progetto. Le
+cartelle vanno adattate al contesto funzionale, per esempio `agente`, `prodotto`,
+`ordine`, `acquisto` o `reporting`.
 
-Includere:
+## 1. Dominio
 
-attributi essenziali
+- creare il modello in `domain/<contesto>/model`;
+- definire invarianti e transizioni di stato nel modello, quando pertinenti;
+- creare eccezioni di dominio specifiche e con messaggi in italiano;
+- creare eventi di dominio soltanto per effetti successivi al caso d'uso;
+- definire l'interfaccia del repository in `domain/<contesto>/repository`;
+- evitare dipendenze da JPA, HTTP o dettagli del database.
 
-invarianti
+## 2. Application
 
-regole di business
+- creare request e response DTO in `application/<contesto>/dto`;
+- aggiungere Bean Validation ai contratti di input;
+- creare un caso d'uso per ogni operazione applicativa;
+- usare le interfacce di repository e le porte, non implementazioni tecniche;
+- definire esplicitamente il confine `@Transactional` delle operazioni di
+  scrittura;
+- validare nel backend tutte le regole, anche se il frontend limita le azioni.
 
-metodi di comportamento
+## 3. Infrastructure
 
-stati validi
+- creare o aggiornare l'entità JPA;
+- creare il mapper tra dominio, persistenza e DTO;
+- aggiungere `JpaRepository` e adapter del repository di dominio;
+- usare JDBC soltanto quando necessario, come nel motore dei rapporti;
+- configurare servizi esterni attraverso proprietà e variabili di ambiente;
+- non inserire credenziali nel codice o nei test.
 
-1.2. Creare eventi di dominio (se presenti)
-domain/<contexto>/event/NovaEntidadeCriadaEvent.java
+## 4. Presentation
 
-1.3. Creare il repository di dominio (interfaccia)
-domain/<contexto>/repository/NovaEntidadeRepository.java
+- creare il controller REST in `presentation`;
+- utilizzare percorsi, status HTTP e header `Location` coerenti;
+- delegare la regola al caso d'uso;
+- aggiungere il trattamento dell'errore in `GlobalExceptionHandler`, se
+  necessario;
+- verificare il contratto nella Swagger UI.
 
-Senza JPA.
-Senza database.
-Senza tecnologia.
+## 5. Test
 
-1.4. Creare Domain Services (se necessario)
-Solo se la logica non può essere contenuta nell’entità.
+- testare invarianti e stati del dominio;
+- testare il caso d'uso e i rollback logici;
+- testare il controller e gli errori HTTP;
+- testare mapper e adapter che contengono logica significativa;
+- aggiungere test repository/API con Testcontainers quando la persistenza è
+  coinvolta;
+- verificare casi positivi, input non valido, entità inesistente e conflitti;
+- evitare servizi esterni reali nella suite automatica.
 
-⚙️ 2. APPLICATION — Casi d’uso
-2.1. Creare i DTO
-application/<contexto>/dto/NovaEntidadeRequest.java  
-application/<contexto>/dto/NovaEntidadeResponse.java
+## 6. Frontend e documentazione
 
-2.2. Creare i Use Case
-application/<contexto>/usecase/CriarNovaEntidadeUseCase.java  
-application/<contexto>/usecase/AtualizarNovaEntidadeUseCase.java  
-application/<contexto>/usecase/BuscarNovaEntidadeUseCase.java
+- aggiungere tipi, servizio HTTP, pagina, rotta e voce di menu;
+- visualizzare gli errori restituiti dal backend in modo comprensibile;
+- aggiungere test del servizio e dei principali flussi utente;
+- aggiornare i README e, se cambia una regola funzionale, la
+  [base di conoscenza](../ai/base-conoscenza-sistema.md);
+- non esporre segreti nelle variabili `VITE_`.
 
-Il use case:
+## Ordine suggerito
 
-riceve il DTO
-
-chiama il dominio
-
-utilizza il repository (interfaccia)
-
-restituisce il DTO
-
-Senza JPA.
-Senza database.
-
-🗄️ 3. INFRASTRUCTURE — Adapters
-3.1. Creare la Entity JPA
-infrastructure/persistence/entity/NovaEntidadeEntity.java
-
-3.2. Creare il Mapper
-infrastructure/persistence/mapper/<contexto>/NovaEntidadeMapper.java
-
-Converte:
-
-Domain ↔ Entity
-
-Domain ↔ DTO
-
-3.3. Creare il JpaRepository
-infrastructure/persistence/repository/NovaEntidadeJpaRepository.java
-
-3.4. Creare il RepositoryImpl (adapter)
-infrastructure/persistence/repository/NovaEntidadeRepositoryImpl.java
-
-Implementa il repository di dominio usando:
-
-JpaRepository
-
-Mapper
-
-🌐 4. PRESENTATION — API
-4.1. Creare il Controller
-presentation/<contexto>/NovaEntidadeController.java
-
-Esso:
-
-riceve le richieste
-
-chiama il use case
-
-restituisce il DTO
-
-🎯 Riassunto dell’ordine corretto
-Domain Model
-
-Domain Event (se presente)
-
-Domain Repository (interfaccia)
-
-DTOs
-
-Use Cases
-
-Entity JPA
-
-Mapper
-
-JpaRepository
-
-RepositoryImpl
-
-Controller
+```text
+Dominio -> porte/DTO -> casi d'uso -> persistenza -> controller
+        -> frontend -> test integrati -> documentazione
+```
