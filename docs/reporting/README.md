@@ -4,6 +4,11 @@ Il motore consente a un DBA di creare, modificare e pubblicare rapporti senza
 modificare o ricompilare il backend o il frontend. Il database è l'unica fonte
 di configurazione.
 
+Per la visione generale del sistema consultare il
+[README principale](../../readme.md); per le regole funzionali destinate anche
+all'assistente IA consultare la
+[base di conoscenza](../ai/base-conoscenza-sistema.md).
+
 ## Installazione
 
 Eseguire nel database `ProjectJava`, nell'ordine indicato:
@@ -19,8 +24,8 @@ Il secondo script crea:
 - `reporting.parametri_rapporti`: metadati dei filtri;
 - `reporting.colonne_rapporti`: etichette, ordine, visibilità e formato;
 - procedure amministrative per registrazione e sincronizzazione;
-- la role di esecuzione `report_executor_role`;
-- la role amministrativa `report_designer_role`;
+- il ruolo di esecuzione `report_executor_role`;
+- il ruolo amministrativo `report_designer_role`;
 - il rapporto iniziale degli ordini di vendita.
 
 Il terzo script pubblica la classifica dei venditori per periodo. La classifica
@@ -115,8 +120,8 @@ EXEC reporting.usp_registra_rapporto
     @Ordine = 10;
 ```
 
-La registrazione concede automaticamente alla role di esecuzione il permesso
-sulla procedure registrata.
+La registrazione concede automaticamente al ruolo di esecuzione il permesso
+sulla procedura registrata.
 
 ### 2. Sincronizzare i parametri
 
@@ -187,7 +192,7 @@ dai metadati, quindi non è necessario creare una nuova pagina nel frontend.
 
 ## Parametri di selezione
 
-Una procedure di opzioni non deve avere parametri e deve restituire esattamente
+Una procedura di opzioni non deve avere parametri e deve restituire esattamente
 le colonne `valore` ed `etichetta`:
 
 ```sql
@@ -266,3 +271,16 @@ Le stored procedure dei rapporti devono essere revisionate per garantire che non
 contengano comandi di modifica. Per una garanzia fisica di sola lettura negli
 ambienti critici, eseguire i rapporti su una replica o su un database dedicato
 configurato come read-only.
+
+## Utilizzo nella dashboard e nell'assistente IA
+
+La dashboard consuma la stessa API generica della pagina Rapporti. Per produrre
+un grafico utilizzabile, il risultato deve contenere almeno una colonna
+descrittiva e una colonna numerica. Il frontend privilegia come valore una
+colonna con formato `VALUTA`, poi una colonna totalizzabile e infine la prima
+colonna SQL numerica. Vengono rappresentate al massimo le prime 12 categorie.
+
+Un futuro assistente IA può usare i rapporti come strumenti autorizzati per
+rispondere a domande sui dati correnti. Non deve ricevere né eseguire SQL libero:
+deve selezionare un rapporto pubblicato, validarne i parametri ed eseguirlo
+attraverso `/api/rapporti/{id}/esegui`.
