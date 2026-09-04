@@ -2,21 +2,26 @@
 
 ## Obiettivo
 
-Questa cartella prepara una fonte controllata per un assistente che risponda
+Questa cartella contiene la fonte controllata dell'assistente che risponde
 soltanto a domande su Gestione Ordini. Il modello linguistico non viene
 “addestrato soltanto sul sistema”: riceve invece istruzioni di ambito, una base
 di conoscenza selezionata e strumenti backend autorizzati.
 
 ## Fonti autorizzate
 
+La versione attuale carica direttamente:
+
 1. [base-conoscenza-sistema.md](base-conoscenza-sistema.md), per terminologia e
-   regole funzionali;
-2. [../architettura.md](../architettura.md), per domande tecniche;
-3. [../reporting/README.md](../reporting/README.md), per amministrazione dei
+   regole funzionali.
+
+Le evoluzioni future potranno aggiungere esplicitamente:
+
+1. [../architettura.md](../architettura.md), per domande tecniche;
+2. [../reporting/README.md](../reporting/README.md), per amministrazione dei
    rapporti;
-4. catalogo runtime dei rapporti, per titoli, parametri e disponibilità
+3. catalogo runtime dei rapporti, per titoli, parametri e disponibilità
    correnti;
-5. endpoint applicativi inseriti esplicitamente nella lista degli strumenti
+4. endpoint applicativi inseriti esplicitamente nella lista degli strumenti
    consentiti.
 
 README generici, log, file temporanei, codice compilato e credenziali non devono
@@ -33,10 +38,59 @@ Il modello non deve costruire SQL. Il backend deve scegliere l'operazione da una
 lista consentita, eseguirla con un utente di sola lettura e restituire al modello
 soltanto i dati necessari alla risposta.
 
+Nella versione attuale l'assistente combina la base di conoscenza statica con
+una fotografia corrente e controllata degli ordini di vendita. Il backend legge
+riepiloghi e righe recenti esclusivamente dalla view autorizzata; il modello non
+genera e non esegue SQL.
+
+## Identità SQL di sola lettura
+
+Lo script
+`../../src/main/resources/db/ai/001_utente_lettura_ordini_vendita.sql` prepara
+il login `gestione_ordini_ai`. L'utente appartiene soltanto al ruolo
+`ai_ordini_vendita_reader_role`, che può eseguire `SELECT` sulla view
+`reporting.vw_ordini_vendita` e non sulle tabelle `dbo`.
+
+La password viene fornita tramite la variabile SQLCMD `AI_DB_PASSWORD`. La
+connessione dedicata del backend usa:
+
+- `AI_DB_URL`;
+- `AI_DB_USERNAME`;
+- `AI_DB_PASSWORD`.
+
+Questa identità non deve essere riutilizzata dal datasource applicativo o dal
+motore generico dei rapporti. La sua presenza non autorizza SQL prodotto dal
+modello: tutte le consultazioni sono predefinite nel backend, limitate e consultano
+soltanto la view autorizzata.
+
+## Implementazione attuale
+
+Il frontend invia domanda e una cronologia limitata a
+`POST /api/assistente/domande`. Il backend carica la base autorizzata, consulta
+il contesto corrente tramite il datasource IA e aggiunge entrambi alle istruzioni
+di ambito. Solo allora chiama l'endpoint chat completions di Groq richiedendo una
+risposta JSON strutturata con `inAmbito` e `risposta`.
+
+Il contesto dinamico contiene:
+
+- numero e valore totale degli ordini;
+- totali per stato;
+- classifiche per venditore e cliente;
+- totali degli ultimi dodici mesi;
+- gli ordini registrati più recentemente.
+
+Le classifiche e le righe recenti sono limitate da
+`AI_DB_MAX_ROWS_PER_SECTION` per evitare richieste troppo grandi al provider.
+
+La classificazione è applicata nuovamente dal caso d'uso: quando `inAmbito` è
+falso, il testo prodotto dal modello viene ignorato e viene restituita la frase
+di rifiuto definita dall'applicazione. Il servizio rimane disabilitato finché
+`AI_ENABLED=true` e `GROQ_API_KEY` non sono configurati.
+
 ## Preparazione del contesto
 
-Per le dimensioni attuali, il backend può caricare i file Markdown UTF-8 e
-dividerli per titolo. Se la documentazione crescerà, sarà possibile aggiungere
+Per le dimensioni attuali, il backend carica l'intera base Markdown UTF-8 dal
+classpath. Se la documentazione crescerà, sarà possibile dividerla per titolo e aggiungere
 un indice vettoriale mantenendo:
 
 - percorso del documento;

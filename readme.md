@@ -20,6 +20,8 @@ L'interfaccia e i messaggi applicativi sono principalmente in italiano.
   ripristinata;
 - rapporti configurabili tramite metadati e stored procedure SQL Server;
 - API generica utilizzata dalla pagina Rapporti e dalla dashboard del frontend;
+- assistente IA dedicato alle domande sul sistema, con base di conoscenza
+  controllata e rifiuto delle richieste fuori ambito;
 - documentazione OpenAPI e Swagger UI.
 
 I numeri degli ordini vengono generati dal sistema:
@@ -36,6 +38,7 @@ I numeri degli ordini vengono generati dal sistema:
 - SQL Server e HikariCP
 - Springdoc OpenAPI
 - Gmail API con OAuth 2.0
+- API Groq compatibile con OpenAI e risposte JSON strutturate
 - JUnit 5, Mockito e Spring Boot Test
 - Testcontainers per i test di integrazione con SQL Server
 
@@ -119,6 +122,34 @@ Per ottenere il refresh token la prima volta:
 L'endpoint di configurazione deve rimanere disabilitato durante il normale
 utilizzo dell'applicazione.
 
+### Assistente IA
+
+L'assistente è disabilitato per impostazione predefinita. Per abilitarlo:
+
+| Variabile | Valore predefinito | Descrizione |
+| --- | --- | --- |
+| `AI_ENABLED` | `false` | Abilita le chiamate al provider IA. |
+| `GROQ_API_KEY` | vuoto | Chiave privata usata soltanto dal backend. |
+| `AI_MODEL` | `openai/gpt-oss-20b` | Modello configurato nel provider. |
+| `AI_BASE_URL` | endpoint chat completions Groq | Endpoint compatibile con OpenAI. |
+| `AI_TIMEOUT_SECONDS` | `30` | Timeout massimo della richiesta. |
+| `AI_MAX_COMPLETION_TOKENS` | `600` | Limite della risposta generata. |
+| `AI_DB_ENABLED` | valore di `AI_ENABLED` | Abilita il contesto dinamico degli ordini di vendita. |
+| `AI_DB_URL` | vuoto | URL JDBC del database consultato dall'assistente. |
+| `AI_DB_USERNAME` | vuoto | Login SQL dedicato `gestione_ordini_ai`. |
+| `AI_DB_PASSWORD` | vuoto | Password del login SQL dedicato. |
+| `AI_DB_MAX_ROWS_PER_SECTION` | `20` | Limite per classifiche ed elenco degli ordini recenti. |
+| `AI_DB_QUERY_TIMEOUT_SECONDS` | `10` | Timeout delle consultazioni di sola lettura. |
+
+La chiave non deve essere inserita nel frontend né salvata nel repository. La
+base caricata dal backend è `docs/ai/base-conoscenza-sistema.md`. Le domande
+fuori ambito, i tentativi di ottenere segreti e le richieste di SQL libero
+vengono rifiutati.
+
+Poiché il progetto non dispone ancora di autenticazione, non esporre l'endpoint
+IA su Internet senza aggiungere autenticazione, autorizzazione e limitazione
+delle richieste. Il CORS del browser non protegge direttamente l'API.
+
 ## Database dei rapporti
 
 Eseguire una sola volta, nel database `ProjectJava`, gli script presenti in
@@ -131,6 +162,29 @@ Eseguire una sola volta, nel database `ProjectJava`, gli script presenti in
 
 Gli script devono essere mantenuti insieme alle modifiche del catalogo dei
 rapporti.
+
+### Accesso dati dedicato all'assistente IA
+
+Lo script
+`src/main/resources/db/ai/001_utente_lettura_ordini_vendita.sql` crea il login
+`gestione_ordini_ai` e un ruolo che concede `SELECT` esclusivamente sulla view
+`reporting.vw_ordini_vendita`. Non assegna `db_datareader`, `db_datawriter` o
+`db_owner` e nega la lettura dello schema `dbo` e l'esecuzione di procedure.
+
+La password deve essere fornita come variabile SQLCMD e non deve essere salvata
+nel repository:
+
+```powershell
+sqlcmd -S localhost -d master -U $env:DB_USERNAME -P $env:DB_PASSWORD `
+  -v AI_DB_PASSWORD="$env:AI_DB_PASSWORD" `
+  -i src/main/resources/db/ai/001_utente_lettura_ordini_vendita.sql
+```
+
+Quando `AI_DB_ENABLED=true`, il backend usa una fonte dati separata e di sola
+lettura per costruire un contesto corrente con riepilogo generale, stato,
+venditore, cliente, ultimi dodici mesi e ordini recenti. Le query sono definite
+nel backend e consultano esclusivamente `reporting.vw_ordini_vendita`: il modello
+non riceve credenziali e non può inviare SQL, nomi di tabelle o procedure.
 
 ## Avvio locale
 
@@ -166,6 +220,7 @@ Risorse principali:
 | Ordini di acquisto | `/api/ordini-acquisto` |
 | Righe degli ordini di acquisto | `/api/ordini-acquisto/{ordineId}/righe` |
 | Rapporti | `/api/rapporti` |
+| Assistente IA | `/api/assistente/domande` |
 
 ## Test
 
@@ -190,12 +245,12 @@ eseguito soltanto in modo esplicito, con le variabili Gmail configurate e con
 - [Architettura e flussi tecnici](docs/architettura.md)
 - [Motore dinamico dei rapporti](docs/reporting/README.md)
 - [Base di conoscenza funzionale per utenti e IA](docs/ai/base-conoscenza-sistema.md)
-- [Guida di integrazione del futuro assistente IA](docs/ai/README.md)
+- [Guida di integrazione dell'assistente IA](docs/ai/README.md)
 - [Checklist per un nuovo modulo](docs/checklists/nuovo-modulo-ddd.md)
 - [Riferimenti tecnici](HELP.md)
 
 Quando una regola funzionale viene modificata, aggiornare nello stesso commit la
-base di conoscenza. In questo modo la documentazione e il futuro assistente del
+base di conoscenza. In questo modo la documentazione e l'assistente del
 sistema rimangono coerenti con il comportamento applicativo.
 
 ## Sicurezza

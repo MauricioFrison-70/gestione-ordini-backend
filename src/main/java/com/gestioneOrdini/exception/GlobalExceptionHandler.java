@@ -13,6 +13,8 @@ import com.gestioneOrdini.domain.ordine.exception.ProdottoGiaPresenteNellOrdineE
 import com.gestioneOrdini.domain.ordine.exception.ScortaInsufficienteException;
 import com.gestioneOrdini.domain.shared.EntityNotFoundException;
 import com.gestioneOrdini.domain.prodotto.exception.CodiceProdottoDuplicatoException;
+import com.gestioneOrdini.application.assistente.exception.AssistenteNonDisponibileException;
+import com.gestioneOrdini.application.assistente.exception.AssistenteProviderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -178,6 +180,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleMetodoNonSupportato(HttpRequestMethodNotSupportedException ex) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(Map.of(
                 "errore", "Metodo HTTP non supportato per questa risorsa"
+        ));
+    }
+
+    @ExceptionHandler(AssistenteNonDisponibileException.class)
+    public ResponseEntity<?> handleAssistenteNonDisponibile(AssistenteNonDisponibileException ex) {
+        log.warn("Assistente IA non disponibile: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                "errore", "L'assistente IA non è temporaneamente disponibile. Riprovare più tardi."
+        ));
+    }
+
+    @ExceptionHandler(AssistenteProviderException.class)
+    public ResponseEntity<?> handleAssistenteProvider(AssistenteProviderException ex) {
+        log.error("Risposta non valida del provider IA", ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "errore", "Il servizio IA non ha restituito una risposta valida."
         ));
     }
 
