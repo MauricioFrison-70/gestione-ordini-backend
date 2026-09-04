@@ -116,6 +116,18 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>docs/ai</directory>
+                <targetPath>ai</targetPath>
+                <includes>
+                    <include>base-conoscenza-sistema.md</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
 
             <plugin>

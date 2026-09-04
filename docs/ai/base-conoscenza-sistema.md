@@ -201,6 +201,20 @@ Le preferenze sono memorizzate nel `localStorage` del browser e rimangono sullo
 stesso computer e profilo del browser. Non sono sincronizzate tra dispositivi.
 Il grafico usa al massimo le prime 12 categorie restituite dal rapporto.
 
+## Assistente IA
+
+La parte inferiore della dashboard contiene un'unica area di dialogo con
+l'assistente Gestione Ordini. L'assistente risponde a domande sul sistema
+utilizzando questa base di conoscenza e un riepilogo corrente degli ordini di
+vendita letto dalla view autorizzata. Il contesto breve della conversazione è
+conservato soltanto durante la sessione corrente della pagina.
+
+Non esegue operazioni applicative e non genera SQL. Le consultazioni correnti
+sono predefinite nel backend, di sola lettura e limitate a
+`reporting.vw_ordini_vendita`. Se il provider o il datasource dedicato non sono
+disponibili, l'interfaccia mostra un errore e permette di riprovare. Le
+credenziali rimangono esclusivamente nel backend.
+
 ## Funzioni non presenti
 
 Alla data di questo documento non sono implementati:
@@ -208,7 +222,6 @@ Alla data di questo documento non sono implementati:
 - autenticazione e gestione degli account utente;
 - ruoli e autorizzazioni applicative;
 - sincronizzazione cloud delle preferenze della dashboard;
-- assistente IA operativo;
 - esecuzione di query SQL libere dal browser.
 
 ## Fonti da consultare
