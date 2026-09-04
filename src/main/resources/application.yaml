@@ -3,7 +3,7 @@ spring:
     name: demo
 
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=ProjectJava;encrypt=false
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=ProjectJava;encrypt=false}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 

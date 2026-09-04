@@ -202,6 +202,32 @@ Linux o macOS:
 
 Il backend viene esposto su `http://localhost:8081`.
 
+## Immagine Docker del backend
+
+Il `Dockerfile` usa un build multi-stage: Maven e JDK sono presenti soltanto
+nella fase di compilazione, mentre l'immagine finale contiene il JRE e il file
+JAR. Il processo viene eseguito con un utente Linux non privilegiato e dispone
+di un health check su `/actuator/health`.
+
+Costruzione dell'immagine:
+
+```powershell
+docker build -t gestione-ordini-backend:local .
+```
+
+Esecuzione con SQL Server installato sul computer host:
+
+```powershell
+docker run --rm -p 8081:8081 `
+  -e DB_URL="jdbc:sqlserver://host.docker.internal:1433;databaseName=ProjectJava;encrypt=false" `
+  -e DB_USERNAME="nome_utente" `
+  -e DB_PASSWORD="password" `
+  gestione-ordini-backend:local
+```
+
+Non inserire credenziali nel `Dockerfile`, nell'immagine o nel repository. Il
+futuro file Compose fornirà URL e credenziali attraverso variabili d'ambiente.
+
 ## API e documentazione interattiva
 
 - Swagger UI: `http://localhost:8081/swagger-ui.html`
