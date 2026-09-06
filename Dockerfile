@@ -21,6 +21,7 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY --from=build --chown=app:app /workspace/target/gestioneOrdini-*.jar ./app.jar
+COPY --chown=app:app --chmod=755 docker/backend/docker-entrypoint.sh ./docker-entrypoint.sh
 
 USER app
 EXPOSE 8081
@@ -28,4 +29,4 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl --fail --silent --show-error http://localhost:8081/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
