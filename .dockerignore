@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.mvn
+target
+*.iml
+*.log
+.env
+.env.*
+client_secret*.json
+
+docs/*
+!docs/ai/
+!docs/ai/base-conoscenza-sistema.md

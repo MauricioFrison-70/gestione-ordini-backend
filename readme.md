@@ -202,6 +202,95 @@ Linux o macOS:
 
 Il backend viene esposto su `http://localhost:8081`.
 
+## Immagine Docker del backend
+
+Il `Dockerfile` usa un build multi-stage: Maven e JDK sono presenti soltanto
+nella fase di compilazione, mentre l'immagine finale contiene il JRE e il file
+JAR. Il processo viene eseguito con un utente Linux non privilegiato e dispone
+di un health check su `/actuator/health`.
+
+Costruzione dell'immagine:
+
+```powershell
+docker build -t gestione-ordini-backend:local .
+```
+
+Esecuzione con SQL Server installato sul computer host:
+
+```powershell
+docker run --rm -p 8081:8081 `
+  -e DB_URL="jdbc:sqlserver://host.docker.internal:1433;databaseName=ProjectJava;encrypt=false" `
+  -e DB_USERNAME="nome_utente" `
+  -e DB_PASSWORD="password" `
+  gestione-ordini-backend:local
+```
+
+Non inserire credenziali nel `Dockerfile`, nell'immagine o nel repository. Il
+file Compose fornisce URL e credenziali tramite configurazioni e segreti runtime.
+
+## Ambiente completo con Docker Compose
+
+Il file `compose.yaml` avvia l'intero sistema senza richiedere Java, Maven,
+Node.js o SQL Server installati sulla macchina. È necessario soltanto Docker
+Desktop in esecuzione e i due repository clonati come cartelle adiacenti:
+
+```text
+cartella-di-lavoro/
+├── gestione-ordini-backend/
+└── gestione-ordini-frontend/
+```
+
+Lo script riconosce anche i nomi locali `gestioneOrdiniBackend` e
+`gestioneOrdiniFrontend`.
+
+Da PowerShell, nella cartella del backend:
+
+```powershell
+.\avvia-docker.ps1
+```
+
+In alternativa:
+
+```powershell
+docker compose up --build --detach --wait
+```
+
+Al primo avvio vengono eseguite automaticamente le seguenti operazioni:
+
+1. generazione di password casuali in un volume Docker privato;
+2. avvio di SQL Server 2022 Developer con volume persistente;
+3. creazione del database e degli utenti applicativi;
+4. creazione o aggiornamento delle tabelle tramite Hibernate;
+5. installazione di view, stored procedure, rapporti e permessi;
+6. caricamento idempotente dei dati dimostrativi;
+7. avvio del backend e del frontend.
+
+Indirizzi disponibili:
+
+- applicazione: `http://localhost:5173`;
+- API: `http://localhost:8081`;
+- Swagger UI: `http://localhost:8081/swagger-ui.html`.
+
+Per arrestare i container conservando dati e credenziali:
+
+```powershell
+.\arresta-docker.ps1
+```
+
+Oppure:
+
+```powershell
+docker compose down
+```
+
+I volumi `sqlserver-data` e `runtime-secrets` non vengono rimossi dal comando
+precedente. `docker compose down --volumes` elimina definitivamente il
+database dimostrativo e genera nuove credenziali al successivo avvio.
+
+Le integrazioni Gmail e IA sono disabilitate per impostazione predefinita nel
+Compose. Le loro credenziali reali non fanno parte delle immagini e devono
+essere fornite dal sistema di deploy tramite segreti runtime.
+
 ## API e documentazione interattiva
 
 - Swagger UI: `http://localhost:8081/swagger-ui.html`

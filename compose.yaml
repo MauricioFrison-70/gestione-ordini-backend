@@ -1,0 +1,105 @@
+name: gestione-ordini
+
+services:
+  secrets-init:
+    image: gestione-ordini-secrets:local
+    build:
+      context: ./docker/secrets
+    volumes:
+      - runtime-secrets:/secrets
+    restart: "no"
+
+  database:
+    image: gestione-ordini-database:local
+    build:
+      context: .
+      dockerfile: docker/database/Dockerfile
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_MEMORY_LIMIT_MB: "2048"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+      - runtime-secrets:/run/secrets:ro
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          SQLCMDPASSWORD="$$(cat /run/secrets/mssql_sa_password)"
+          /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa
+          -Q "SET NOCOUNT ON; SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 12
+    restart: unless-stopped
+
+  database-init:
+    image: gestione-ordini-database:local
+    pull_policy: never
+    entrypoint: ["/opt/gestione-ordini/inizializza-database.sh"]
+    volumes:
+      - runtime-secrets:/run/secrets:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    image: gestione-ordini-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:sqlserver://database:1433;databaseName=ProjectJava;encrypt=true;trustServerCertificate=true
+      DB_USERNAME: gestione_ordini_app
+      REPORTING_DB_URL: jdbc:sqlserver://database:1433;databaseName=ProjectJava;encrypt=true;trustServerCertificate=true
+      REPORTING_DB_USERNAME: gestione_ordini_report
+      AI_ENABLED: "false"
+      AI_DB_ENABLED: "false"
+      AI_DB_URL: jdbc:sqlserver://database:1433;databaseName=ProjectJava;encrypt=true;trustServerCertificate=true
+      AI_DB_USERNAME: gestione_ordini_ai
+    volumes:
+      - runtime-secrets:/run/secrets:ro
+    ports:
+      - "8081:8081"
+    depends_on:
+      database:
+        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  database-finalize:
+    image: gestione-ordini-database:local
+    pull_policy: never
+    entrypoint: ["/opt/gestione-ordini/finalizza-database.sh"]
+    volumes:
+      - runtime-secrets:/run/secrets:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: "no"
+
+  frontend:
+    image: gestione-ordini-frontend:local
+    build:
+      context: ${FRONTEND_CONTEXT:-../gestione-ordini-frontend}
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8081/api
+    ports:
+      - "5173:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+      database-finalize:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  runtime-secrets:
+  sqlserver-data:
