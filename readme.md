@@ -293,12 +293,14 @@ essere fornite dal sistema di deploy tramite segreti runtime.
 
 ## Distribuzione pubblica tramite GitHub
 
-Il workflow `.github/workflows/pubblica-immagini.yml` esegue i test e pubblica
-automaticamente su GitHub Container Registry, dopo un push su `main`, le
-immagini Linux AMD64 del backend, del database dimostrativo e del generatore di
-credenziali. Il frontend dispone di un workflow equivalente nel proprio
-repository. Ogni immagine riceve i tag `latest` e `sha-*`; i tag Git `v*`
-producono inoltre tag di versione.
+Il workflow `.github/workflows/pubblica-immagini.yml` valida ogni pull request
+verso `main` con tutti i test unitari, web, repository e API, inclusi i test di
+integrazione su SQL Server tramite Testcontainers. Dopo il merge, il medesimo
+controllo viene ripetuto su `main` e, soltanto in caso di esito positivo,
+pubblica nel GitHub Container Registry le immagini Linux AMD64 del backend, del
+database dimostrativo e del generatore di credenziali. Il frontend dispone di
+un workflow equivalente nel proprio repository. Ogni immagine riceve i tag
+`latest` e `sha-*`; i tag Git `v*` producono inoltre tag di versione.
 
 La cartella `distribuzione` contiene il pacchetto leggero destinato agli utenti
 Windows. Il suo file Compose usa esclusivamente immagini pubblicate e non

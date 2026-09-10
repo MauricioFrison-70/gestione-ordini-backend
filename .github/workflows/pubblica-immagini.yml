@@ -1,6 +1,8 @@
 name: Verifica e pubblica immagini Docker
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     tags: ['v*']
@@ -12,7 +14,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -20,8 +21,9 @@ env:
 
 jobs:
   test:
-    name: Test backend
+    name: Validazione backend completa
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Scarica i sorgenti
         uses: actions/checkout@v4
@@ -33,13 +35,19 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Esegui i test
-        run: ./mvnw -B -ntp test
+      - name: Esegui test unitari, web, repository e API
+        run: ./mvnw -B -ntp verify -Pintegration
 
   pubblica:
     name: Pubblica ${{ matrix.nome }}
     needs: test
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
