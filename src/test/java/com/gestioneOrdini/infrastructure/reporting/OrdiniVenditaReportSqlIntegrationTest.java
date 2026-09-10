@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +167,12 @@ class OrdiniVenditaReportSqlIntegrationTest extends AbstractSqlServerIntegration
         OrdineVendita secondoOrdine = salvaOrdinePerVenditore(primoVenditore, "RankingA2");
         OrdineVendita terzoOrdine = salvaOrdinePerVenditore(secondoVenditore, "RankingB1");
         OrdineVendita annullato = salvaOrdinePerVenditore(secondoVenditore, "RankingB2");
+        primoOrdine.rilascia(oggi);
+        secondoOrdine.rilascia(oggi);
+        terzoOrdine.rilascia(oggi);
+        ordineRepository.save(primoOrdine);
+        ordineRepository.save(secondoOrdine);
+        ordineRepository.save(terzoOrdine);
         annullato.annulla(oggi);
         ordineRepository.save(annullato);
 
@@ -191,9 +198,12 @@ class OrdiniVenditaReportSqlIntegrationTest extends AbstractSqlServerIntegration
     @Test
     void dovrebbeTotalizzareGliUltimiDodiciMesiInclusiQuelliSenzaVendite() {
         LocalDate meseCorrente = LocalDate.now().withDayOfMonth(1);
-        OrdineVendita ordineCorrente = salvaOrdine("VenditeMeseCorrente", null, null);
-        OrdineVendita ordinePrecedente = salvaOrdine("VenditeMesePrecedente", null, null);
-        OrdineVendita ordineFuoriPeriodo = salvaOrdine("VenditeFuoriPeriodo", null, null);
+        OrdineVendita ordineCorrente = salvaOrdine(
+                "VenditeMeseCorrente", LocalDate.now(), null);
+        OrdineVendita ordinePrecedente = salvaOrdine(
+                "VenditeMesePrecedente", LocalDate.now(), null);
+        OrdineVendita ordineFuoriPeriodo = salvaOrdine(
+                "VenditeFuoriPeriodo", LocalDate.now(), null);
         OrdineVendita ordineAnnullato = salvaOrdine("VenditeAnnullate", null, LocalDate.now());
 
         impostaDataRegistrazione(ordinePrecedente, meseCorrente.minusMonths(1).plusDays(10));
@@ -378,6 +388,7 @@ class OrdiniVenditaReportSqlIntegrationTest extends AbstractSqlServerIntegration
     private void applica(String risorsa) {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator(
                 new ClassPathResource(risorsa));
+        populator.setSqlScriptEncoding(StandardCharsets.UTF_8.name());
         populator.setSeparator("GO");
         DatabasePopulatorUtils.execute(populator, dataSource);
     }
