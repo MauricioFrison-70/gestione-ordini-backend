@@ -1,0 +1,96 @@
+name: Verifica e pubblica immagini Docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: immagini-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACE: mauriciofrison-70
+
+jobs:
+  test:
+    name: Test backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scarica i sorgenti
+        uses: actions/checkout@v4
+
+      - name: Configura Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Esegui i test
+        run: ./mvnw -B -ntp test
+
+  pubblica:
+    name: Pubblica ${{ matrix.nome }}
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nome: backend
+            immagine: gestione-ordini-backend
+            contesto: .
+            dockerfile: ./Dockerfile
+          - nome: database
+            immagine: gestione-ordini-database
+            contesto: .
+            dockerfile: ./docker/database/Dockerfile
+          - nome: secrets
+            immagine: gestione-ordini-secrets
+            contesto: ./docker/secrets
+            dockerfile: ./docker/secrets/Dockerfile
+    steps:
+      - name: Scarica i sorgenti
+        uses: actions/checkout@v4
+
+      - name: Configura Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Accedi al GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Genera etichette e versioni
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.immagine }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+
+      - name: Costruisci e pubblica
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.contesto }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.nome }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.nome }}
+          provenance: true
+          sbom: true
