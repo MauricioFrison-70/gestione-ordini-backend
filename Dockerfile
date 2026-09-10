@@ -12,6 +12,9 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 FROM eclipse-temurin:17-jre-jammy AS runtime
 
+LABEL org.opencontainers.image.source="https://github.com/MauricioFrison-70/gestione-ordini-backend" \
+      org.opencontainers.image.description="Backend Spring Boot del sistema dimostrativo Gestione Ordini"
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \

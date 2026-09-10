@@ -291,6 +291,28 @@ Le integrazioni Gmail e IA sono disabilitate per impostazione predefinita nel
 Compose. Le loro credenziali reali non fanno parte delle immagini e devono
 essere fornite dal sistema di deploy tramite segreti runtime.
 
+## Distribuzione pubblica tramite GitHub
+
+Il workflow `.github/workflows/pubblica-immagini.yml` esegue i test e pubblica
+automaticamente su GitHub Container Registry, dopo un push su `main`, le
+immagini Linux AMD64 del backend, del database dimostrativo e del generatore di
+credenziali. Il frontend dispone di un workflow equivalente nel proprio
+repository. Ogni immagine riceve i tag `latest` e `sha-*`; i tag Git `v*`
+producono inoltre tag di versione.
+
+La cartella `distribuzione` contiene il pacchetto leggero destinato agli utenti
+Windows. Il suo file Compose usa esclusivamente immagini pubblicate e non
+richiede i sorgenti. Quando viene pubblicata una GitHub Release, il workflow
+`pubblica-release-demo.yml` allega automaticamente:
+
+- `gestione-ordini-demo.zip`;
+- `gestione-ordini-demo.zip.sha256` per verificarne l'integrità.
+
+L'utente deve soltanto estrarre lo ZIP, avviare Docker Desktop e fare doppio
+clic su `avvia-app.bat`. Le immagini pubbliche non contengono password reali:
+le credenziali del database dimostrativo vengono generate al primo avvio in un
+volume Docker locale. Gmail e IA rimangono disabilitati.
+
 ## API e documentazione interattiva
 
 - Swagger UI: `http://localhost:8081/swagger-ui.html`

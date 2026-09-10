@@ -1,0 +1,33 @@
+name: Pubblica pacchetto dimostrativo
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  pacchetto:
+    name: Crea pacchetto di avvio
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scarica i sorgenti
+        uses: actions/checkout@v4
+
+      - name: Crea il file ZIP
+        run: |
+          cd distribuzione
+          zip -r ../gestione-ordini-demo.zip .
+          cd ..
+          sha256sum gestione-ordini-demo.zip > gestione-ordini-demo.zip.sha256
+
+      - name: Allega il pacchetto alla release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_RELEASE: ${{ github.event.release.tag_name }}
+        run: >-
+          gh release upload "$TAG_RELEASE"
+          gestione-ordini-demo.zip
+          gestione-ordini-demo.zip.sha256
+          --clobber

@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/mssql/server:2022-latest
 
+LABEL org.opencontainers.image.source="https://github.com/MauricioFrison-70/gestione-ordini-backend" \
+      org.opencontainers.image.description="SQL Server con struttura e dati dimostrativi di Gestione Ordini"
+
 USER root
 
 RUN mkdir -p /opt/gestione-ordini/scripts/reporting \

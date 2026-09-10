@@ -1,0 +1,48 @@
+GESTIONE ORDINI - VERSIONE DIMOSTRATIVA
+=======================================
+
+REQUISITI
+---------
+- Windows 10 o 11 a 64 bit.
+- Docker Desktop installato e in esecuzione.
+- Almeno 4 GB di memoria disponibili per Docker.
+- Connessione Internet durante il primo avvio.
+
+AVVIO
+-----
+1. Estrarre completamente questo file ZIP.
+2. Avviare Docker Desktop e attendere che sia pronto.
+3. Fare doppio clic su avvia-app.bat.
+4. Attendere il download e la preparazione del database.
+5. Il browser aprira automaticamente http://localhost:5173.
+
+Il primo avvio puo richiedere diversi minuti perche include SQL Server.
+Gli avvii successivi saranno piu rapidi.
+
+ARRESTO
+-------
+Fare doppio clic su arresta-app.bat. I dati inseriti restano memorizzati nei
+volumi Docker e saranno disponibili al prossimo avvio.
+
+AGGIORNAMENTO
+-------------
+Eseguire nuovamente avvia-app.bat. Docker scarichera le immagini piu recenti
+prima di avviare il sistema.
+
+DATI E CREDENZIALI
+------------------
+Le password del database dimostrativo vengono generate localmente e non sono
+incluse nelle immagini. Gmail e assistente IA sono disabilitati in questa
+distribuzione pubblica.
+
+RISOLUZIONE DEI PROBLEMI
+------------------------
+- Verificare che Docker Desktop sia in esecuzione.
+- Verificare che le porte 5173 e 8081 non siano gia utilizzate.
+- Da un terminale aperto in questa cartella eseguire: docker compose ps
+- Per visualizzare i log eseguire: docker compose logs
+
+SORGENTI
+--------
+Backend:  https://github.com/MauricioFrison-70/gestione-ordini-backend
+Frontend: https://github.com/MauricioFrison-70/gestione-ordini-frontend
