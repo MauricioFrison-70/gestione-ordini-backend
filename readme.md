@@ -35,7 +35,7 @@ I numeri degli ordini vengono generati dal sistema:
 - Spring Boot 3.3.4
 - Spring Web, Validation e Actuator
 - Spring Data JPA e Hibernate
-- SQL Server e HikariCP
+- SQL Server, Azure SQL Database e HikariCP
 - Springdoc OpenAPI
 - Gmail API con OAuth 2.0
 - API Groq compatibile con OpenAI e risposte JSON strutturate
@@ -74,6 +74,7 @@ installare Maven separatamente.
 
 | Variabile | Obbligatoria | Descrizione |
 | --- | --- | --- |
+| `DB_URL` | sì fuori dall'ambiente locale | URL JDBC del database. |
 | `DB_USERNAME` | sì | Utente SQL Server dell'applicazione. |
 | `DB_PASSWORD` | sì | Password dell'utente applicativo. |
 
@@ -82,6 +83,26 @@ Per lo sviluppo locale, URL e database sono definiti in
 le proprietà Spring tramite variabili di ambiente o un profilo dedicato.
 
 > Non salvare password, token OAuth o file di credenziali nel repository.
+
+### Pubblicazione su Microsoft Azure
+
+Il profilo `azure` configura health probes, gestione degli header inoltrati e
+un pool JDBC contenuto per Azure Container Apps. Attivarlo con:
+
+```text
+SPRING_PROFILES_ACTIVE=azure
+```
+
+Le origini autorizzate dal CORS sono configurabili senza ricompilare il
+backend. Per il frontend pubblicato su Azure Static Web Apps, impostare:
+
+```text
+CORS_ALLOWED_ORIGINS=https://<nome-frontend>.azurestaticapps.net
+```
+
+Più origini possono essere separate da virgola. Gli script specifici per
+Azure SQL e l'ordine completo della configurazione sono descritti in
+[docs/azure/README.md](docs/azure/README.md).
 
 ### Connessione dedicata ai rapporti
 
@@ -359,6 +380,7 @@ eseguito soltanto in modo esplicito, con le variabili Gmail configurate e con
 - [Motore dinamico dei rapporti](docs/reporting/README.md)
 - [Base di conoscenza funzionale per utenti e IA](docs/ai/base-conoscenza-sistema.md)
 - [Guida di integrazione dell'assistente IA](docs/ai/README.md)
+- [Distribuzione su Microsoft Azure](docs/azure/README.md)
 - [Checklist per un nuovo modulo](docs/checklists/nuovo-modulo-ddd.md)
 - [Riferimenti tecnici](HELP.md)
 
@@ -372,9 +394,9 @@ sistema rimangono coerenti con il comportamento applicativo.
 - il setup OAuth è disabilitato per impostazione predefinita;
 - il motore dei rapporti accetta soltanto procedure registrate nello schema
   `reporting` e colonne esplicitamente autorizzate;
-- il frontend locale è autorizzato dal CORS su `localhost:5173` e
-  `127.0.0.1:5173`; gli ambienti distribuiti richiedono una configurazione
-  specifica;
+- il CORS autorizza per impostazione predefinita soltanto `localhost:5173` e
+  `127.0.0.1:5173`; gli ambienti distribuiti devono usare
+  `CORS_ALLOWED_ORIGINS`;
 - l'autenticazione degli utenti applicativi non è ancora implementata.
 
 ## Autore
