@@ -149,3 +149,66 @@ aggiornata direttamente.
 In un ambiente di produzione, sostituire `ddl-auto=update` con migrazioni
 versionate e `ddl-auto=validate`, rimuovendo quindi `db_ddladmin` dall'utente
 applicativo.
+
+## 8. Distribuzione automatica del backend
+
+Il workflow `.github/workflows/pubblica-immagini.yml` esegue automaticamente:
+
+1. tutti i test Maven configurati nel profilo `integration`;
+2. la costruzione e pubblicazione delle immagini nel GHCR;
+3. la distribuzione del backend nel Container App quando il commit entra in
+   `main`;
+4. il controllo di `/actuator/health` e il ripristino del traffico verso la
+   revisione precedente in caso di errore.
+
+La distribuzione usa la tag immutabile `sha-<commit>` e non `latest`. Il
+Container App deve essere configurato in modalità di revisione **Multiple**.
+Le variabili d'ambiente e i secrets già presenti nel Container App non vengono
+sostituiti dal workflow.
+
+### Autenticazione GitHub-Azure con OIDC
+
+Creare in Microsoft Entra ID un'applicazione dedicata, con una credenziale
+federata GitHub limitata a:
+
+```text
+Organizzazione: MauricioFrison-70
+Organization ID: 243792191
+Repository: gestione-ordini-backend
+Repository ID: 1299334940
+Tipo di entità: Branch
+Branch: main
+Audience: api://AzureADTokenExchange
+```
+
+I campi ID sono richiesti dalla nuova configurazione GitHub OIDC basata su
+identificatori immutabili. Il portale genera automaticamente l'identificatore
+del soggetto dopo la selezione della branch; non modificarlo manualmente.
+
+Assegnare a questa identità il ruolo **Container Apps Contributor** sul solo
+Container App `ca-gestione-ordini-api`. Se il ruolo non è disponibile nella
+sottoscrizione, usare **Contributor** mantenendo lo stesso ambito ristretto.
+
+In GitHub, aprire **Settings > Secrets and variables > Actions > Variables** e
+creare le seguenti repository variables:
+
+```text
+AZURE_CLIENT_ID=<ID applicazione Entra>
+AZURE_TENANT_ID=<ID directory tenant>
+AZURE_SUBSCRIPTION_ID=<ID sottoscrizione Azure>
+```
+
+Non è necessario creare un client secret Azure. GitHub richiede un token OIDC
+temporaneo a ogni esecuzione del workflow.
+
+### Quando viene effettuata la distribuzione
+
+- pull request verso `main`: esegue i test, ma non pubblica né distribuisce;
+- merge/push su `main`: esegue i test, pubblica le immagini e distribuisce il
+  backend in Azure;
+- tag `v*`: esegue i test e pubblica le immagini versionate, senza modificare
+  il Container App;
+- esecuzione manuale sulla branch `main`: ripete pubblicazione e distribuzione.
+
+Il frontend continua a essere distribuito dal workflow Azure Static Web Apps
+presente nel repository frontend.
