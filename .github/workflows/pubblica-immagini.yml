@@ -102,3 +102,127 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.nome }}
           provenance: true
           sbom: true
+
+  distribuisci-azure:
+    name: Distribuisci backend in Azure
+    needs: pubblica
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CORE_OUTPUT: none
+      AZURE_RESOURCE_GROUP: rg-gestione-ordini-demo
+      AZURE_CONTAINER_APP: ca-gestione-ordini-api
+      AZURE_CONTAINER_NAME: gestione-ordini-backend
+      BACKEND_IMAGE: ghcr.io/mauriciofrison-70/gestione-ordini-backend
+    steps:
+      - name: Accedi ad Azure con OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Crea e verifica la nuova revisione
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          short_sha="${GITHUB_SHA::7}"
+          image="${BACKEND_IMAGE}:sha-${short_sha}"
+          suffix="git-${short_sha}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          revision_mode="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.configuration.activeRevisionsMode \
+            --output tsv)"
+
+          if [[ "$revision_mode" != "Multiple" ]]; then
+            echo "Il Container App deve utilizzare la modalita di revisione Multiple." >&2
+            exit 1
+          fi
+
+          previous_revision="$(az containerapp ingress traffic show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "[?weight > \`0\`].revisionName | [0]" \
+            --output tsv)"
+
+          if [[ -z "$previous_revision" ]]; then
+            previous_revision="$(az containerapp show \
+              --name "$AZURE_CONTAINER_APP" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --query properties.latestReadyRevisionName \
+              --output tsv)"
+          fi
+
+          echo "Distribuzione dell'immagine ${image}"
+          az containerapp update \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --container-name "$AZURE_CONTAINER_NAME" \
+            --image "$image" \
+            --revision-suffix "$suffix"
+
+          new_revision="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.latestRevisionName \
+            --output tsv)"
+
+          ready=false
+          for attempt in {1..30}; do
+            latest_ready="$(az containerapp show \
+              --name "$AZURE_CONTAINER_APP" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --query properties.latestReadyRevisionName \
+              --output tsv)"
+
+            if [[ "$latest_ready" == "$new_revision" ]]; then
+              ready=true
+              break
+            fi
+
+            echo "Revisione ${new_revision} non ancora pronta (${attempt}/30)."
+            sleep 10
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "La nuova revisione ${new_revision} non e diventata pronta." >&2
+            exit 1
+          fi
+
+          az containerapp ingress traffic set \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --revision-weight "${new_revision}=100"
+
+          fqdn="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)"
+
+          if ! curl --fail --silent --show-error \
+            --retry 12 --retry-delay 10 --retry-all-errors \
+            "https://${fqdn}/actuator/health"; then
+            echo "Il controllo di salute non e riuscito. Ripristino della revisione precedente." >&2
+
+            if [[ -n "$previous_revision" && "$previous_revision" != "$new_revision" ]]; then
+              az containerapp ingress traffic set \
+                --name "$AZURE_CONTAINER_APP" \
+                --resource-group "$AZURE_RESOURCE_GROUP" \
+                --revision-weight "${previous_revision}=100"
+            fi
+
+            exit 1
+          fi
+
+          echo
+          echo "Revisione ${new_revision} distribuita con successo."
