@@ -26,6 +26,9 @@ public class ReportingConnectionProvider {
         config.setMinimumIdle(0);
         config.setReadOnly(true);
         config.setConnectionTimeout(properties.getConnectionTimeoutMs());
+        config.addDataSourceProperty("loginTimeout", properties.getLoginTimeoutSeconds());
+        config.addDataSourceProperty("connectRetryCount", properties.getConnectRetryCount());
+        config.addDataSourceProperty("connectRetryInterval", properties.getConnectRetryIntervalSeconds());
         config.setPoolName("reporting-read-only");
         this.dataSource = new HikariDataSource(config);
     }
