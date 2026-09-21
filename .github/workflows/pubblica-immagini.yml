@@ -168,6 +168,8 @@ jobs:
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --container-name "$AZURE_CONTAINER_NAME" \
             --image "$image" \
+            --min-replicas 1 \
+            --max-replicas 1 \
             --revision-suffix "$suffix"
 
           new_revision="$(az containerapp show \
