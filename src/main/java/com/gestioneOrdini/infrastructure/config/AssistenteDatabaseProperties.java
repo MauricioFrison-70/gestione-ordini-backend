@@ -11,6 +11,9 @@ public class AssistenteDatabaseProperties {
     private String driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     private int maximumPoolSize = 2;
     private long connectionTimeoutMs = 10_000;
+    private int loginTimeoutSeconds = 30;
+    private int connectRetryCount = 1;
+    private int connectRetryIntervalSeconds = 10;
     private int queryTimeoutSeconds = 10;
     private int maximumRowsPerSection = 20;
 
@@ -29,6 +32,18 @@ public class AssistenteDatabaseProperties {
     public long getConnectionTimeoutMs() { return connectionTimeoutMs; }
     public void setConnectionTimeoutMs(long connectionTimeoutMs) {
         this.connectionTimeoutMs = connectionTimeoutMs;
+    }
+    public int getLoginTimeoutSeconds() { return loginTimeoutSeconds; }
+    public void setLoginTimeoutSeconds(int loginTimeoutSeconds) {
+        this.loginTimeoutSeconds = loginTimeoutSeconds;
+    }
+    public int getConnectRetryCount() { return connectRetryCount; }
+    public void setConnectRetryCount(int connectRetryCount) {
+        this.connectRetryCount = connectRetryCount;
+    }
+    public int getConnectRetryIntervalSeconds() { return connectRetryIntervalSeconds; }
+    public void setConnectRetryIntervalSeconds(int connectRetryIntervalSeconds) {
+        this.connectRetryIntervalSeconds = connectRetryIntervalSeconds;
     }
     public int getQueryTimeoutSeconds() { return queryTimeoutSeconds; }
     public void setQueryTimeoutSeconds(int queryTimeoutSeconds) {

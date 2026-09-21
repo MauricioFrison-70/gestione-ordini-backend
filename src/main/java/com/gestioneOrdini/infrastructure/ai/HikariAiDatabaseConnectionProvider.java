@@ -27,6 +27,9 @@ class HikariAiDatabaseConnectionProvider implements AiDatabaseConnectionProvider
         config.setMinimumIdle(0);
         config.setReadOnly(true);
         config.setConnectionTimeout(Math.max(1_000, properties.getConnectionTimeoutMs()));
+        config.addDataSourceProperty("loginTimeout", properties.getLoginTimeoutSeconds());
+        config.addDataSourceProperty("connectRetryCount", properties.getConnectRetryCount());
+        config.addDataSourceProperty("connectRetryInterval", properties.getConnectRetryIntervalSeconds());
         config.setPoolName("assistente-ai-read-only");
         this.dataSource = new HikariDataSource(config);
     }

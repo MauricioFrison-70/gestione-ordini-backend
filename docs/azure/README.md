@@ -14,10 +14,16 @@ Nel Container App configurare `DB_URL` con la stringa fornita da Azure SQL,
 adattata al formato JDBC:
 
 ```text
-jdbc:sqlserver://<server>.database.windows.net:1433;databaseName=<database>;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30
+jdbc:sqlserver://<server>.database.windows.net:1433;databaseName=<database>;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net
 ```
 
 Non aggiungere nome utente o password alla URL. Usare secrets separati.
+Con il profilo `azure`, `application-azure.yaml` configura automaticamente fino
+a sei nuovi tentativi di connessione JDBC per gli errori transitori di Azure SQL
+(incluso 40613). Il timeout complessivo consente al database serverless di
+riattivarsi; non vengono ripetute richieste HTTP o istruzioni SQL. Non occorre
+modificare un `DB_URL` già configurato con `loginTimeout=30`: le proprietà JDBC
+del datasource hanno la precedenza sul valore nella URL.
 
 ## 2. Creazione dell'utente applicativo
 

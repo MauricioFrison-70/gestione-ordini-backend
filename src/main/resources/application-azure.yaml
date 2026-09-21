@@ -6,7 +6,13 @@ spring:
     hikari:
       maximum-pool-size: ${DB_MAX_POOL_SIZE:5}
       minimum-idle: ${DB_MINIMUM_IDLE:0}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      # Serverless Azure SQL can reject the first login (40613) while resuming.
+      # Retry only the JDBC connection, never an HTTP request or SQL statement.
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:95000}
+      data-source-properties:
+        loginTimeout: ${DB_LOGIN_TIMEOUT_SECONDS:90}
+        connectRetryCount: ${DB_CONNECT_RETRY_COUNT:6}
+        connectRetryInterval: ${DB_CONNECT_RETRY_INTERVAL_SECONDS:10}
   jpa:
     hibernate:
       # Il progetto dimostrativo crea e aggiorna lo schema al primo avvio.
@@ -16,6 +22,20 @@ spring:
 server:
   forward-headers-strategy: framework
   shutdown: graceful
+
+reporting:
+  datasource:
+    connection-timeout-ms: ${REPORTING_DB_CONNECTION_TIMEOUT_MS:95000}
+    login-timeout-seconds: ${DB_LOGIN_TIMEOUT_SECONDS:90}
+    connect-retry-count: ${DB_CONNECT_RETRY_COUNT:6}
+    connect-retry-interval-seconds: ${DB_CONNECT_RETRY_INTERVAL_SECONDS:10}
+
+assistente:
+  database:
+    connection-timeout-ms: ${AI_DB_CONNECTION_TIMEOUT_MS:95000}
+    login-timeout-seconds: ${DB_LOGIN_TIMEOUT_SECONDS:90}
+    connect-retry-count: ${DB_CONNECT_RETRY_COUNT:6}
+    connect-retry-interval-seconds: ${DB_CONNECT_RETRY_INTERVAL_SECONDS:10}
 
 management:
   endpoint:
