@@ -26,8 +26,11 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +41,10 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final int AZURE_SQL_DATABASE_NON_DISPONIBILE = 40613;
+    private static final String CODICE_DATABASE_IN_RIATTIVAZIONE = "DATABASE_IN_RIATTIVAZIONE";
+    private static final String MESSAGGIO_DATABASE_IN_RIATTIVAZIONE =
+            "Il database si sta riattivando. Attendere qualche secondo: l'operazione verrà riprovata automaticamente.";
 
     /**
      * Errori di validazione generati da @Valid.
@@ -185,6 +192,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AssistenteNonDisponibileException.class)
     public ResponseEntity<?> handleAssistenteNonDisponibile(AssistenteNonDisponibileException ex) {
+        if (databaseAzureInRiattivazione(ex)) {
+            return rispostaDatabaseInRiattivazione(ex);
+        }
         log.warn("Assistente IA non disponibile: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                 "errore", "L'assistente IA non è temporaneamente disponibile. Riprovare più tardi."
@@ -205,10 +215,44 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception ex) {
+        if (databaseAzureInRiattivazione(ex)) {
+            return rispostaDatabaseInRiattivazione(ex);
+        }
         log.error("Errore interno del server", ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("errore", "Errore interno del server"));
+    }
+
+    private ResponseEntity<?> rispostaDatabaseInRiattivazione(Exception ex) {
+        log.warn("Azure SQL temporaneamente non disponibile durante la riattivazione: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header("Retry-After", "8")
+                .body(Map.of(
+                        "codice", CODICE_DATABASE_IN_RIATTIVAZIONE,
+                        "errore", MESSAGGIO_DATABASE_IN_RIATTIVAZIONE
+                ));
+    }
+
+    private boolean databaseAzureInRiattivazione(Throwable errore) {
+        Set<Throwable> visitati = new HashSet<>();
+        Throwable corrente = errore;
+
+        while (corrente != null && visitati.add(corrente)) {
+            if (corrente instanceof SQLException sqlException
+                    && sqlException.getErrorCode() == AZURE_SQL_DATABASE_NON_DISPONIBILE) {
+                return true;
+            }
+
+            String messaggio = corrente.getMessage();
+            if (messaggio != null
+                    && messaggio.contains("is not currently available")
+                    && messaggio.contains("Database")) {
+                return true;
+            }
+            corrente = corrente.getCause();
+        }
+        return false;
     }
 
 }
