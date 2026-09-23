@@ -26,6 +26,7 @@ class HikariAiDatabaseConnectionProvider implements AiDatabaseConnectionProvider
         config.setMaximumPoolSize(Math.max(1, properties.getMaximumPoolSize()));
         config.setMinimumIdle(0);
         config.setReadOnly(true);
+        config.setInitializationFailTimeout(-1);
         config.setConnectionTimeout(Math.max(1_000, properties.getConnectionTimeoutMs()));
         config.addDataSourceProperty("loginTimeout", properties.getLoginTimeoutSeconds());
         config.addDataSourceProperty("connectRetryCount", properties.getConnectRetryCount());
