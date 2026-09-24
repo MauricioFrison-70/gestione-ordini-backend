@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -239,16 +240,21 @@ public class GlobalExceptionHandler {
         Throwable corrente = errore;
 
         while (corrente != null && visitati.add(corrente)) {
-            if (corrente instanceof SQLException sqlException
-                    && sqlException.getErrorCode() == AZURE_SQL_DATABASE_NON_DISPONIBILE) {
-                return true;
+            if (corrente instanceof SQLException sqlException) {
+                String statoSql = sqlException.getSQLState();
+                if (sqlException instanceof SQLTransientConnectionException
+                        || sqlException.getErrorCode() == AZURE_SQL_DATABASE_NON_DISPONIBILE
+                        || (statoSql != null && statoSql.startsWith("08"))) {
+                    return true;
+                }
             }
 
             String messaggio = corrente.getMessage();
             if (messaggio != null
-                    && messaggio.contains("is not currently available")
-                    && messaggio.contains("Database")) {
-                return true;
+                    && (messaggio.contains("is not currently available")
+                    || messaggio.contains("Connection is not available, request timed out")
+                    || messaggio.contains("Unable to acquire JDBC Connection"))) {
+                    return true;
             }
             corrente = corrente.getCause();
         }

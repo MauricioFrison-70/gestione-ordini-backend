@@ -25,20 +25,20 @@ class AzureSqlRetryConfigurationTest {
 
         var primary = new HikariConfig();
         binder.bind("spring.datasource.hikari", Bindable.ofInstance(primary));
-        assertEquals(12_000, primary.getConnectionTimeout());
+        assertEquals(10_000, primary.getConnectionTimeout());
         assertEquals(-1, primary.getInitializationFailTimeout());
         assertEquals("10", primary.getDataSourceProperties().getProperty("loginTimeout"));
         assertEquals("1", primary.getDataSourceProperties().getProperty("connectRetryCount"));
         assertEquals("5", primary.getDataSourceProperties().getProperty("connectRetryInterval"));
 
         var reporting = binder.bind("reporting.datasource", ReportingDataSourceProperties.class).get();
-        assertEquals(12_000, reporting.getConnectionTimeoutMs());
+        assertEquals(10_000, reporting.getConnectionTimeoutMs());
         assertEquals(10, reporting.getLoginTimeoutSeconds());
         assertEquals(1, reporting.getConnectRetryCount());
         assertEquals(5, reporting.getConnectRetryIntervalSeconds());
 
         var assistant = binder.bind("assistente.database", AssistenteDatabaseProperties.class).get();
-        assertEquals(12_000, assistant.getConnectionTimeoutMs());
+        assertEquals(10_000, assistant.getConnectionTimeoutMs());
         assertEquals(10, assistant.getLoginTimeoutSeconds());
         assertEquals(1, assistant.getConnectRetryCount());
         assertEquals(5, assistant.getConnectRetryIntervalSeconds());

@@ -11,7 +11,7 @@ spring:
       # Azure SQL serverless restituisce 40613 durante la riattivazione. Una
       # attesa breve permette alla API di rispondere 503 e al frontend di
       # riprovare automaticamente, senza lasciare la schermata ferma per 95 s.
-      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:12000}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:10000}
       data-source-properties:
         loginTimeout: ${DB_LOGIN_TIMEOUT_SECONDS:10}
         connectRetryCount: ${DB_CONNECT_RETRY_COUNT:1}
@@ -28,14 +28,14 @@ server:
 
 reporting:
   datasource:
-    connection-timeout-ms: ${REPORTING_DB_CONNECTION_TIMEOUT_MS:12000}
+    connection-timeout-ms: ${REPORTING_DB_CONNECTION_TIMEOUT_MS:10000}
     login-timeout-seconds: ${DB_LOGIN_TIMEOUT_SECONDS:10}
     connect-retry-count: ${DB_CONNECT_RETRY_COUNT:1}
     connect-retry-interval-seconds: ${DB_CONNECT_RETRY_INTERVAL_SECONDS:5}
 
 assistente:
   database:
-    connection-timeout-ms: ${AI_DB_CONNECTION_TIMEOUT_MS:12000}
+    connection-timeout-ms: ${AI_DB_CONNECTION_TIMEOUT_MS:10000}
     login-timeout-seconds: ${DB_LOGIN_TIMEOUT_SECONDS:10}
     connect-retry-count: ${DB_CONNECT_RETRY_COUNT:1}
     connect-retry-interval-seconds: ${DB_CONNECT_RETRY_INTERVAL_SECONDS:5}
