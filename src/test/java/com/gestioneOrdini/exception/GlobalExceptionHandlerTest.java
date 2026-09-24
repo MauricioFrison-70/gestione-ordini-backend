@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +33,17 @@ class GlobalExceptionHandlerTest {
         var eccezione = new AssistenteNonDisponibileException("Dati non disponibili", sqlException);
 
         var risposta = handler.handleAssistenteNonDisponibile(eccezione);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, risposta.getStatusCode());
+        assertEquals("DATABASE_IN_RIATTIVAZIONE", corpo(risposta.getBody()).get("codice"));
+    }
+
+    @Test
+    void riconosceIlTimeoutTransitorioDelPoolHikariAncheSenzaCodiceAzure() {
+        var timeout = new SQLTransientConnectionException(
+                "HikariPool-1 - Connection is not available, request timed out after 10000ms");
+
+        var risposta = handler.handleGeneral(new IllegalStateException("Connessione non disponibile", timeout));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, risposta.getStatusCode());
         assertEquals("DATABASE_IN_RIATTIVAZIONE", corpo(risposta.getBody()).get("codice"));
