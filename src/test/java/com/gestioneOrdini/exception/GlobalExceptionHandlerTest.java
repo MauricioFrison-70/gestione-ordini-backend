@@ -41,7 +41,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void riconosceIlTimeoutTransitorioDelPoolHikariAncheSenzaCodiceAzure() {
         var timeout = new SQLTransientConnectionException(
-                "HikariPool-1 - Connection is not available, request timed out after 10000ms");
+                "HikariPool-1 - Connection is not available, request timed out after 5000ms");
 
         var risposta = handler.handleGeneral(new IllegalStateException("Connessione non disponibile", timeout));
 
